@@ -2,6 +2,11 @@
 
 set -x
 
+if [ "$EUID" -ne 0 ]
+    then echo "Please run as root"
+    exit
+fi
+
 vercmp() {
     if [[ "$1" == "$2" ]]; then
         return 0
@@ -49,12 +54,17 @@ Linux*)
     machine=linux
     apt clean
     apt update
-    retry 10 apt install -y apt-transport-https ca-certificates \
+    retry 10 apt install -y apt-transport-https gnupg ca-certificates \
         git build-essential ccache ninja-build pkg-config \
         python3-pip python3-all-dev \
-        libicu-dev mono-complete
+        libicu-dev
 
     update-ca-certificates -f
+
+    apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
+    echo "deb https://download.mono-project.com/repo/ubuntu stable-$(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
+    apt update
+    retry 10 apt install -y mono-roslyn mono-complete mono-dbg msbuild
 
     hash cmake 2>/dev/null || { pip3 install -i https://mirrors.aliyun.com/pypi/simple cmake; }
     hash dotnet 2>/dev/null || { bash ./install-dotnet.sh; }
