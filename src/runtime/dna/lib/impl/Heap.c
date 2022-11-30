@@ -393,7 +393,7 @@ static void GarbageCollect() {
           free(pNode->pSync);
         }
         // Use pSync to point to next entry in this linked-list.
-        pNode->pSync = (tHeapEntry *)pToDelete;
+        pNode->pSync = (void *)pToDelete;
         pToDelete = pNode;
       }
     }

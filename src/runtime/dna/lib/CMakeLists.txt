@@ -66,6 +66,13 @@ target_link_libraries(dna-lib
     PUBLIC ${LIBM_LIBRARIES}
 )
 
+if(WIN32)
+    target_link_libraries(dna-lib
+        PUBLIC wsock32
+        PUBLIC ws2_32
+    )
+endif()
+
 target_include_directories(dna-lib
     PUBLIC "${CMAKE_CURRENT_LIST_DIR}/include/public"
     PRIVATE "${CMAKE_CURRENT_LIST_DIR}/include/private"
