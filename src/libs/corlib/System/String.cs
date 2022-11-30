@@ -529,11 +529,11 @@ namespace System {
 			return Equals(this, obj as string);
 		}
 
-		public static bool operator ==(string a, string b) {
+		public static bool operator ==(System.String a, System.String b) {
 			return Equals(a, b);
 		}
 
-		public static bool operator !=(string a, string b) {
+		public static bool operator !=(System.String a, System.String b) {
 			return !Equals(a, b);
 		}
 

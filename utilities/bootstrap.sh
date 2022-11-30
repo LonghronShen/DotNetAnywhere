@@ -52,24 +52,12 @@ Linux*)
     retry 10 apt install -y apt-transport-https ca-certificates \
         git build-essential ccache ninja-build pkg-config \
         python3-pip python3-all-dev \
-        libicu-dev
+        libicu-dev mono-complete
 
     update-ca-certificates -f
 
-    boost_version="$(apt-cache madison libboost-all-dev | grep -oP "\d+(\.\d+)+")"
-    vercmp "$boost_version" "1.66"
-
-    if [[ $? -ne 2 ]]; then
-        retry 10 apt install -y libboost-all-dev
-    else
-        retry 10 apt install -y software-properties-common
-        add-apt-repository ppa:mhier/libboost-latest -y
-        apt update
-        retry 10 apt install -y libboost1.68-dev
-    fi
-
     hash cmake 2>/dev/null || { pip3 install -i https://mirrors.aliyun.com/pypi/simple cmake; }
-    hash dotnet 2>/dev/null || { curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 7.0; }
+    hash dotnet 2>/dev/null || { bash ./install-dotnet.sh; }
     ;;
 Darwin*)
     machine=osx
