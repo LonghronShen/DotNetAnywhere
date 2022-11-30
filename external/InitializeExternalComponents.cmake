@@ -1,7 +1,8 @@
 find_package(Threads REQUIRED)
 
 if(UNIX)
-    find_package(DL REQUIRED)
+  find_package(M REQUIRED)
+  find_package(DL REQUIRED)
 endif()
 
 set(FETCHCONTENT_UPDATES_DISCONNECTED ON CACHE STRING "FETCHCONTENT_UPDATES_DISCONNECTED" FORCE)

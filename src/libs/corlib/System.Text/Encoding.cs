@@ -85,7 +85,7 @@ namespace System.Text {
 		#region ICloneable Members
 
 		public object Clone() {
-			return (Encoding)object.Clone(this);
+			return (Encoding)System.Object.Clone(this);
 		}
 
 		#endregion

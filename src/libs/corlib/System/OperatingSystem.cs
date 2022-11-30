@@ -88,7 +88,7 @@ namespace System {
 		#region ICloneable Members
 
 		public object Clone() {
-			return (OperatingSystem)object.Clone(this);
+			return (OperatingSystem)System.Object.Clone(this);
 		}
 
 		#endregion

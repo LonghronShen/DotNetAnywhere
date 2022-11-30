@@ -72,7 +72,6 @@
 
 #else // WIN32
 
-#include <dev/wscons/wsconsio.h>
 #include <dlfcn.h>
 #include <glob.h>
 #include <stdlib.h>

@@ -58,8 +58,12 @@ add_library(dna-lib
     STATIC ${asm_src} ${src}
 )
 
+add_library(dna::runtime ALIAS dna-lib)
+
 target_link_libraries(dna-lib
     PUBLIC dna::graph
+    PUBLIC ${CMAKE_DL_LIBS}
+    PUBLIC ${LIBM_LIBRARIES}
 )
 
 target_include_directories(dna-lib

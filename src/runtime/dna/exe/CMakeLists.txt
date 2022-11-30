@@ -14,7 +14,7 @@ file(GLOB_RECURSE src
 # )
 
 # =================================================================
-add_extension(dna ${src})
+add_executable(dna ${src})
 
 target_include_directories(dna
     PUBLIC "${CMAKE_CURRENT_LIST_DIR}/include/public"

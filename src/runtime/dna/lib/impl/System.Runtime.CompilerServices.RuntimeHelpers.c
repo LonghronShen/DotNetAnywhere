@@ -18,6 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#include <string.h>
+
 #include <dna/runtime/clr/Sys.h>
 #include <dna/runtime/clr/pla/Compat.h>
 
@@ -26,10 +28,8 @@
 #include <dna/runtime/clr/cli/MetaData.h>
 #include <dna/runtime/clr/pla/Types.h>
 
-
 #include <dna/runtime/fx/system/System.Array.h>
 #include <dna/runtime/fx/system/System.Runtime.CompilerServices.RuntimeHelpers.h>
-
 
 tAsyncCall *System_Runtime_CompilerServices_InitializeArray(PTR pThis_,
                                                             PTR pParams,

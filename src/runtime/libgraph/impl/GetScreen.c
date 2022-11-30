@@ -343,9 +343,8 @@ void ScreenDispose() {
     InvalidateRect((HWND)screen.screenPtr, NULL, 0);
   }
 }
-
 #else
-
+#ifdef __freebsd__
 #include <dev/wscons/wsconsio.h>
 
 tGraphics *GetScreen_(I32 *pXSize, I32 *pYSize, U32 *pPixelFormat) {
@@ -499,5 +498,19 @@ U32 LatestKeyDown_Internal_() {
   latestKeyDown = 0xffffffff;
   return ret;
 }
+#else
+tGraphics *GetScreen_(I32 *pXSize, I32 *pYSize, U32 *pPixelFormat) {
+  return NULL;
+}
 
+void ScreenDispose() {}
+
+static void ProcessKeyPad() {}
+
+U32 IsKeyDown_Internal_(U32 key) { return 255; }
+
+U32 LatestKeyUp_Internal_() { return 255; }
+
+U32 LatestKeyDown_Internal_() { return 255; }
+#endif
 #endif

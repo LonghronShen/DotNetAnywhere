@@ -85,6 +85,7 @@ typedef I8 int8_t;
 
 #else
 
+#include <stdint.h>
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -97,8 +98,13 @@ typedef I8 int8_t;
 
 #define O_BINARY 0
 
-typedef U16 uint16_t;
-typedef U8 uint8_t;
+typedef int16_t I16;
+typedef int32_t I32;
+typedef int64_t I64;
+
+typedef uint8_t U8;
+typedef uint16_t U16;
+typedef uint32_t U32;
 
 #endif
 

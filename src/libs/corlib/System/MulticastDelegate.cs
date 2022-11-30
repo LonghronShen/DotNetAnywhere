@@ -25,20 +25,20 @@ namespace System {
 
 		protected override Delegate CombineImpl(Delegate follow) {
 
-			MulticastDelegate ret = (MulticastDelegate)object.Clone(this);
+			MulticastDelegate ret = (MulticastDelegate)System.Object.Clone(this);
 			MulticastDelegate cur = ret;
 
 			// Clone and add all the current delegate(s)
 			for (MulticastDelegate del = (MulticastDelegate)this.pNext; del != null; del = (MulticastDelegate)del.pNext) {
-				cur.pNext = (MulticastDelegate)object.Clone(del);
+				cur.pNext = (MulticastDelegate)System.Object.Clone(del);
 				cur = (MulticastDelegate)cur.pNext;
 			}
 
 			// Add all the following delegate(s)
-			cur.pNext = (MulticastDelegate)object.Clone(follow);
+			cur.pNext = (MulticastDelegate)System.Object.Clone(follow);
 			cur = (MulticastDelegate)cur.pNext;
 			for (MulticastDelegate del = (MulticastDelegate)((MulticastDelegate)follow).pNext; del != null; del = (MulticastDelegate)del.pNext) {
-				cur.pNext = (MulticastDelegate)object.Clone(del);
+				cur.pNext = (MulticastDelegate)System.Object.Clone(del);
 				cur = (MulticastDelegate)cur.pNext;
 			}
 			cur.pNext = null;
@@ -54,10 +54,10 @@ namespace System {
 				// Miss out the one we're removing
 				if (!del.Equals(d)) {
 					if (ret == null) {
-						ret = (MulticastDelegate)object.Clone(del);
+						ret = (MulticastDelegate)System.Object.Clone(del);
 						cur = ret;
 					} else {
-						cur.pNext = (MulticastDelegate)object.Clone(del);
+						cur.pNext = (MulticastDelegate)System.Object.Clone(del);
 						cur = (MulticastDelegate)cur.pNext;
 					}
 				}

@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include <stdlib.h>
+#include <string.h>
 
 #include <dna/runtime/clr/Sys.h>
 #include <dna/runtime/clr/pla/Compat.h>
@@ -69,7 +70,7 @@ static tLoadedLib *GetLib(STRING name) {
 #if WIN32
   pNativeLib = LoadLibraryA(libName);
 #else
-  pNativeLib = dlopen(libName, DL_LAZY);
+  pNativeLib = dlopen(libName, RTLD_LAZY);
 #endif
   if (pNativeLib == NULL) {
     // Failed to load library

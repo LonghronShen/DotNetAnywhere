@@ -69,6 +69,7 @@ Linux*)
     fi
 
     hash cmake 2>/dev/null || { pip3 install -i https://mirrors.aliyun.com/pypi/simple cmake; }
+    hash dotnet 2>/dev/null || { curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 7.0; }
     ;;
 Darwin*)
     machine=osx

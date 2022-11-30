@@ -21,7 +21,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 #include <dna/runtime/clr/Sys.h>
 #include <dna/runtime/clr/pla/Compat.h>
 
@@ -394,7 +393,7 @@ static void GarbageCollect() {
           free(pNode->pSync);
         }
         // Use pSync to point to next entry in this linked-list.
-        (tHeapEntry *)(pNode->pSync) = pToDelete;
+        pNode->pSync = (tHeapEntry *)pToDelete;
         pToDelete = pNode;
       }
     }

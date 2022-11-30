@@ -49,3 +49,6 @@ cmake-build-debug/
 debug.log
 
 .cache/
+
+bin/
+obj/
