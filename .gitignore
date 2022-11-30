@@ -1,18 +1,51 @@
-bin
-obj
-Debug
-Release
-Builds
-.vs
-*.ncb
-*.suo
-*.user
-*.pidb
-*.userprefs
-*.xml
-*.nupkg
-*.svn
-*.opensdf
-*.sdf
-*.vcxproj
-*.vcxproj.filters
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# custom build
+build
+build/
+build.*/
+main/build/
+
+# idea
+.idea/
+cmake-build-debug/
+*/cmake-build-debug/
+
+.vscode/
+/.vs
+.ci_env*
+
+debug.log
+
+.cache/
