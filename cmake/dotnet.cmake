@@ -1,23 +1,39 @@
-# Find dotnet cli
-find_program(DOTNET_EXECUTABLE 
-  NAMES dotnet
-  HINTS /usr/local/bin ~/.dotnet
-)
-if(NOT DOTNET_EXECUTABLE)
-  message(FATAL_ERROR "Check for dotnet Program: not found")
-else()
-  message(STATUS "Found dotnet Program: ${DOTNET_EXECUTABLE}")
-endif()
+function(find_program_ex)
+  set(options REQUIRED)
+  set(oneValueArgs NAME VAR)
+  set(multiValueArgs NAMES HINTS)
+  cmake_parse_arguments(FIND_PROGRAM_OPTIONS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+  message(STATUS "Checking for '${FIND_PROGRAM_OPTIONS_NAME}' ...")
+  find_program(FIND_PROGRAM_OPTIONS_VAR
+    NAMES ${NAMES}
+    HINTS ${HINTS}
+  )
+  if(NOT ${FIND_PROGRAM_OPTIONS_VAR})
+    if(NOT FIND_PROGRAM_OPTIONS_REQUIRED)
+      message(STATUS "Check for '${FIND_PROGRAM_OPTIONS_NAME}': not found")
+    else()
+      message(FATAL_ERROR "Check for '${FIND_PROGRAM_OPTIONS_NAME}': not found")
+    endif()
+  else()
+    message(STATUS "Found program '${FIND_PROGRAM_OPTIONS_NAME}': ${${FIND_PROGRAM_OPTIONS_VAR}}")
+  endif()
+endfunction()
 
 # Find dotnet cli
-find_program(MSBUILD_EXECUTABLE 
+find_program_ex(
+  NAME "dotnet"
+  VAR DOTNET_EXECUTABLE
+  NAMES dotnet
+  HINTS /usr/local/bin ~/.dotnet
+  REQUIRED
+)
+
+# Find msbuild cli
+find_program_ex(
+  NAME "msbuild"
+  VAR MSBUILD_EXECUTABLE
   NAMES msbuild xbuild
 )
-if(NOT MSBUILD_EXECUTABLE)
-  message(FATAL_ERROR "Check for msbuild Program: not found")
-else()
-  message(STATUS "Found dotnet Program: ${MSBUILD_EXECUTABLE}")
-endif()
 
 function(add_dotnet_core_project lib_name target_dir)
   file(GLOB_RECURSE subdir_src "${target_dir}/*.cs" "${target_dir}/*.csproj")
