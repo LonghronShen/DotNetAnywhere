@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include <stdlib.h>
+#include <string.h>
 
 #include <dna/runtime/clr/Sys.h>
 #include <dna/runtime/clr/pla/Compat.h>

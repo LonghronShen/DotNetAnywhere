@@ -23,10 +23,12 @@
 
 #include <dna/runtime/fx/system/System.DateTime.h>
 
-#ifndef WIN32
+#include <time.h>
 
+#ifdef WIN32
+#include <windows.h>
+#else
 #include <sys/time.h>
-
 #endif
 
 #define TicksPerSecond 10000000L
@@ -38,24 +40,17 @@ tAsyncCall *System_DateTime_InternalUtcNow(PTR pThis_, PTR pParams,
                                            PTR pReturnValue) {
 
 #ifdef WIN32
-
   FILETIME ft;
-
   GetSystemTimeAsFileTime(&ft);
-
   *(U64 *)pReturnValue = ((U64)ft.dwHighDateTime) * 0x100000000L +
                          ((U64)ft.dwLowDateTime) + TicksAtFileTimeEpoch;
-
 #else
-
   struct timeval tp;
-
   gettimeofday(&tp, NULL);
 
   *(U64 *)pReturnValue = ((U64)tp.tv_sec) * TicksPerSecond +
                          ((U64)tp.tv_usec) * TicksPerMicroSecond +
                          TicksAtUnixEpoch;
-
 #endif
 
   return NULL;

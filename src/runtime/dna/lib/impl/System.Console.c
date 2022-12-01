@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include <stdlib.h>
+#include <string.h>
 
 #include <dna/runtime/clr/Sys.h>
 #include <dna/runtime/clr/pla/Compat.h>
@@ -47,7 +48,7 @@ tAsyncCall *System_Console_Write(PTR pThis_, PTR pParams, PTR pReturnValue) {
         str8[i] = c ? c : '?';
       }
       str8[i] = 0;
-      printf(str8);
+      printf("%s", str8);
       strLen -= thisLen;
       start += thisLen;
     }

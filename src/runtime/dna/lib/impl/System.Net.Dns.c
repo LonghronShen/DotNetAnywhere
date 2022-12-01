@@ -27,8 +27,9 @@
 #include <dna/runtime/fx/system/System.String.h>
 #include <dna/runtime/fx/system/net/System.Net.Dns.h>
 
-
-#ifndef WIN32
+#ifdef WIN32
+#include <windows.h>
+#else
 #include <netdb.h>
 #endif
 
