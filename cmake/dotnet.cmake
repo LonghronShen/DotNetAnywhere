@@ -4,13 +4,14 @@ function(find_program_ex)
   set(multiValueArgs NAMES HINTS)
   cmake_parse_arguments(FIND_PROGRAM_OPTIONS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
   message(STATUS "Checking for '${FIND_PROGRAM_OPTIONS_NAME}' ...")
-  find_program(FIND_PROGRAM_OPTIONS_VAR
-    NAMES ${NAMES}
-    HINTS ${HINTS}
+  find_program(${FIND_PROGRAM_OPTIONS_VAR}
+    NAMES ${FIND_PROGRAM_OPTIONS_NAMES}
+    PATHS ENV "PATH"
+    HINTS ${FIND_PROGRAM_OPTIONS_HINTS}
   )
   if(NOT ${FIND_PROGRAM_OPTIONS_VAR})
     if(NOT FIND_PROGRAM_OPTIONS_REQUIRED)
-      message(STATUS "Check for '${FIND_PROGRAM_OPTIONS_NAME}': not found")
+      message(STATUS "Check for '${FIND_PROGRAM_OPTIONS_NAME}': ${${FIND_PROGRAM_OPTIONS_VAR}}")
     else()
       message(FATAL_ERROR "Check for '${FIND_PROGRAM_OPTIONS_NAME}': not found")
     endif()
@@ -24,7 +25,7 @@ find_program_ex(
   NAME "dotnet"
   VAR DOTNET_EXECUTABLE
   NAMES dotnet
-  HINTS /usr/local/bin ~/.dotnet
+  HINTS /usr/local/bin ~/.dotnet "/c:/Program Files/dotnet/dotnet.exe"
   REQUIRED
 )
 
