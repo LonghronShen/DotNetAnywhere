@@ -1,7 +1,7 @@
 find_package(Threads REQUIRED)
 
 if(UNIX)
-  find_package(M REQUIRED)
+  find_package(libm REQUIRED)
   find_package(DL REQUIRED)
 endif()
 
