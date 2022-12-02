@@ -524,7 +524,7 @@ void MetaData_Fill_TypeDef_(tMD_TypeDef *pTypeDef,
               // Discover interface mapping for each interface method
               for (i = 0; i < pInterface->numVirtualMethods; i++) {
                 tMD_MethodDef *pInterfaceMethod, *pOverriddenMethod;
-
+                Assert(pInterface->pVTable != NULL);
                 pInterfaceMethod = pInterface->pVTable[i];
                 pOverriddenMethod =
                     FindVirtualOverriddenMethod(pTypeDef, pInterfaceMethod);

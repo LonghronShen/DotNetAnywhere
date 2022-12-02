@@ -42,16 +42,6 @@ typedef unsigned char *BLOB_;
 typedef unsigned char *GUID_;
 
 // Int types
-#ifdef WIN32
-typedef char I8;
-typedef unsigned char U8;
-typedef short I16;
-typedef unsigned short U16;
-typedef int I32;
-typedef unsigned int U32;
-typedef long long I64;
-typedef unsigned long long U64;
-#else
 #include <stdint.h>
 
 typedef int8_t I8;
@@ -63,7 +53,6 @@ typedef uint8_t U8;
 typedef uint16_t U16;
 typedef uint32_t U32;
 typedef uint64_t U64;
-#endif
 
 typedef union uConvDouble_ uConvDouble;
 union uConvDouble_ {
