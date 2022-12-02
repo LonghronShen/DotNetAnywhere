@@ -16,5 +16,5 @@ endmacro()
 
 subdirlist(SUBDIRS ${CMAKE_CURRENT_LIST_DIR})
 foreach(subdir ${SUBDIRS})
-  add_dotnet_core_project("${subdir}" "${CMAKE_CURRENT_LIST_DIR}/${subdir}")
+  add_msbuild_project("${subdir}" "${CMAKE_CURRENT_LIST_DIR}/${subdir}")
 endforeach()

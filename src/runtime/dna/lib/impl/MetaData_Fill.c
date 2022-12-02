@@ -524,12 +524,15 @@ void MetaData_Fill_TypeDef_(tMD_TypeDef *pTypeDef,
               // Discover interface mapping for each interface method
               for (i = 0; i < pInterface->numVirtualMethods; i++) {
                 tMD_MethodDef *pInterfaceMethod, *pOverriddenMethod;
-                Assert(pInterface->pVTable != NULL);
-                pInterfaceMethod = pInterface->pVTable[i];
-                pOverriddenMethod =
-                    FindVirtualOverriddenMethod(pTypeDef, pInterfaceMethod);
-                Assert(pOverriddenMethod != NULL);
-                pMap->pVTableLookup[i] = pOverriddenMethod->vTableOfs;
+                if (pInterface->pVTable != NULL) {
+                  pInterfaceMethod = pInterface->pVTable[i];
+                  pOverriddenMethod =
+                      FindVirtualOverriddenMethod(pTypeDef, pInterfaceMethod);
+                  // Assert(pOverriddenMethod != NULL);
+                  if (pOverriddenMethod != NULL) {
+                    pMap->pVTableLookup[i] = pOverriddenMethod->vTableOfs;
+                  }
+                }
               }
             } else {
               Crash("Problem with interface class");

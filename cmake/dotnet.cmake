@@ -40,36 +40,28 @@ function(add_dotnet_core_project lib_name target_dir)
   file(GLOB_RECURSE subdir_src "${target_dir}/*.cs" "${target_dir}/*.csproj")
 
   add_custom_command(
-      OUTPUT "${target_dir}/bin/${lib_name}.dll"
-      COMMAND "${DOTNET_EXECUTABLE}" build -o ./bin/
+      OUTPUT "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${lib_name}.xml"
+      COMMAND "${DOTNET_EXECUTABLE}" build -o "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/"
       DEPENDS ${subdir_src}
       WORKING_DIRECTORY "${target_dir}/"
   )
 
-  add_custom_command(
-      OUTPUT "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${lib_name}.dll"
-      COMMAND ${CMAKE_COMMAND} -E copy "${target_dir}/bin/${lib_name}.dll" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/"
-      DEPENDS "${target_dir}/bin/${lib_name}.dll"
+  add_custom_target("managed_lib_${lib_name}" ALL
+    DEPENDS "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${lib_name}.xml"
   )
-
-  add_custom_target("managed_lib_${lib_name}" ALL DEPENDS "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${lib_name}.dll")
 endfunction()
 
 function(add_msbuild_project lib_name target_dir)
   file(GLOB_RECURSE subdir_src "${target_dir}/*.cs" "${target_dir}/*.csproj")
 
   add_custom_command(
-      OUTPUT "${target_dir}/bin/${lib_name}.dll"
-      COMMAND "${MSBUILD_EXECUTABLE}" build /p:OutputPath=./bin/
+      OUTPUT "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${lib_name}.xml"
+      COMMAND "${MSBUILD_EXECUTABLE}" "${lib_name}.csproj" /p:OutputPath="${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/"
       DEPENDS ${subdir_src}
       WORKING_DIRECTORY "${target_dir}/"
   )
 
-  add_custom_command(
-      OUTPUT "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${lib_name}.dll"
-      COMMAND ${CMAKE_COMMAND} -E copy "${target_dir}/bin/${lib_name}.dll" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/"
-      DEPENDS "${target_dir}/bin/${lib_name}.dll"
+  add_custom_target("managed_lib_${lib_name}" ALL
+    DEPENDS "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${lib_name}.xml"
   )
-
-  add_custom_target("managed_lib_${lib_name}" ALL DEPENDS "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${lib_name}.dll")
 endfunction()

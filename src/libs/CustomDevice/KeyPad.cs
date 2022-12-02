@@ -25,78 +25,128 @@ using System.Runtime.InteropServices;
 using System.Drawing;
 using System.Threading;
 
-namespace CustomDevice {
-	public static class KeyPad {
+namespace CustomDevice
+{
+    public static class KeyPad
+    {
 
-		[DllImport("libIGraph")]
-		extern private static bool IsKeyDown_Internal(KeyPadKey key);
+        [DllImport("libIGraph")]
+        extern private static bool IsKeyDown_Internal(KeyPadKey key);
 
-		[DllImport("libIGraph")]
-		extern private static int LatestKeyUp_Internal();
+        [DllImport("libIGraph")]
+        extern private static int LatestKeyUp_Internal();
 
-		[DllImport("libIGraph")]
-		extern private static int LatestKeyDown_Internal();
+        [DllImport("libIGraph")]
+        extern private static int LatestKeyDown_Internal();
 
-		public static bool IsKeyDown(KeyPadKey key) {
-			if (Utils.IsInterNet2) {
-				return IsKeyDown_Internal(key);
-			} else {
-				return WindowsScreen.WinScreen.IsKeyDown(key);
-			}
-		}
+        public static bool IsKeyDown(KeyPadKey key)
+        {
+#if WNDOWS
+            if (Utils.IsInterNet2)
+            {
+                return IsKeyDown_Internal(key);
+            }
+            else
+            {
+                return WindowsScreen.WinScreen.IsKeyDown(key);
+            }
+#else
+            return IsKeyDown_Internal(key);
+#endif
+        }
 
-		private static bool WindowsLatestKeyUp(out KeyPadKey key) {
-			return WindowsScreen.WinScreen.LatestKeyUp(out key);
-		}
+#if WNDOWS
+        private static bool WindowsLatestKeyUp(out KeyPadKey key)
+        {
+            return WindowsScreen.WinScreen.LatestKeyUp(out key);
+        }
 
-		private static bool WindowsLatestKeyDown(out KeyPadKey key) {
-			return WindowsScreen.WinScreen.LatestKeyDown(out key);
-		}
+        private static bool WindowsLatestKeyDown(out KeyPadKey key)
+        {
+            return WindowsScreen.WinScreen.LatestKeyDown(out key);
+        }
+#else
+        private static bool InterNet2LatestKeyUp(out KeyPadKey key)
+        {
+            int iKey = LatestKeyUp_Internal();
+            if (iKey >= 0)
+            {
+                key = (KeyPadKey)iKey;
+                return true;
+            }
+            else
+            {
+                key = KeyPadKey.B0;
+                return false;
+            }
+        }
 
-		public static bool LatestKeyUp(out KeyPadKey key) {
-			if (Utils.IsInterNet2) {
-				int iKey = LatestKeyUp_Internal();
-				if (iKey >= 0) {
-					key = (KeyPadKey)iKey;
-					return true;
-				} else {
-					key = KeyPadKey.B0;
-					return false;
-				}
-			} else {
-				return WindowsLatestKeyUp(out key);
-			}
-		}
+        private static bool InterNet2LatestKeyDown(out KeyPadKey key)
+        {
+            int iKey = LatestKeyDown_Internal();
+            if (iKey >= 0)
+            {
+                key = (KeyPadKey)iKey;
+                return true;
+            }
+            else
+            {
+                key = KeyPadKey.B0;
+                return false;
+            }
+        }
+#endif
 
-		public static bool LatestKeyDown(out KeyPadKey key) {
-			if (Utils.IsInterNet2) {
-				int iKey = LatestKeyDown_Internal();
-				if (iKey >= 0) {
-					key = (KeyPadKey)iKey;
-					return true;
-				} else {
-					key = KeyPadKey.B0;
-					return false;
-				}
-			} else {
-				return WindowsLatestKeyDown(out key);
-			}
-		}
+        public static bool LatestKeyUp(out KeyPadKey key)
+        {
+#if WNDOWS
+            if (Utils.IsInterNet2)
+            {
+                return InterNet2LatestKeyUp(out key);
+            }
+            else
+            {
+                return WindowsLatestKeyUp(out key);
+            }
+#else
+            return InterNet2LatestKeyUp(out key);
+#endif
+        }
 
-		public static KeyPadKey? ReadKey(int timeoutMs) {
-			DateTime end = DateTime.UtcNow.AddMilliseconds(timeoutMs);
-			do {
-				KeyPadKey key;
-				if (LatestKeyDown(out key)) {
-					return key;
-				}
-				Thread.Sleep(1);
-			} while (DateTime.UtcNow < end && timeoutMs >= 0);
-			return null;
-		}
+        public static bool LatestKeyDown(out KeyPadKey key)
+        {
+#if WNDOWS
+            if (Utils.IsInterNet2)
+            {
+                return InterNet2LatestKeyDown(out key);
+            }
+            else
+            {
+                return WindowsLatestKeyDown(out key);
+            }
+#else
+            return InterNet2LatestKeyDown(out key);
+#endif
+        }
 
-		public static KeyPadKey? ReadKey() {
-			return ReadKey(-1);
-		}
-	}
+        public static KeyPadKey? ReadKey(int timeoutMs)
+        {
+            DateTime end = DateTime.UtcNow.AddMilliseconds(timeoutMs);
+            do
+            {
+                KeyPadKey key;
+                if (LatestKeyDown(out key))
+                {
+                    return key;
+                }
+                Thread.Sleep(1);
+            } while (DateTime.UtcNow < end && timeoutMs >= 0);
+            return null;
+        }
+
+        public static KeyPadKey? ReadKey()
+        {
+            return ReadKey(-1);
+        }
+    }
 }

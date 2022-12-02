@@ -22,19 +22,31 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace CustomDevice {
-	static class Utils {
+namespace CustomDevice
+{
 
-		private static bool isDNA, isDNASet = false;
-		public static bool IsInterNet2 {
-			get {
-				if (!isDNASet) {
-					isDNA = Environment.OSVersion.VersionString.EndsWith("(DNA)");
-					isDNASet = true;
-				}
-				return isDNA;
-			}
-		}
+    internal static class Utils
+    {
 
-	}
+        private static bool isDNA, isDNASet = false;
+
+        public static bool IsInterNet2
+        {
+            get
+            {
+#if WINDOWS
+                if (!isDNASet)
+                {
+                    isDNA = Environment.OSVersion.VersionString.EndsWith("(DNA)");
+                    isDNASet = true;
+                }
+                return isDNA;
+#else
+                return true;
+#endif
+            }
+        }
+
+    }
+
 }
