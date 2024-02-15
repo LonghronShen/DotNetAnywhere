@@ -1,20 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFrameworks>net20</TargetFrameworks>
-    <VersionPrefix>2.0.0</VersionPrefix>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <!-- <NoStdLib>true</NoStdLib> -->
-    <!-- <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences> -->
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <FileAlignment>512</FileAlignment>
-    <WindowsForms>true</WindowsForms>
-    <Optimize>true</Optimize>
-    <Configurations>Debug;Release</Configurations>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFrameworks>net20</TargetFrameworks>
+		<VersionPrefix>2.0.0</VersionPrefix>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<!-- <NoStdLib>true</NoStdLib> -->
+		<!-- <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences> -->
+		<ErrorReport>prompt</ErrorReport>
+		<WarningLevel>4</WarningLevel>
+		<FileAlignment>512</FileAlignment>
+		<WindowsForms>true</WindowsForms>
+		<Optimize>true</Optimize>
+		<Configurations>Debug;Release</Configurations>
+	</PropertyGroup>
 
 </Project>
