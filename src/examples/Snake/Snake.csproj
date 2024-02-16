@@ -9,7 +9,7 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<ErrorReport>prompt</ErrorReport>
 		<WarningLevel>4</WarningLevel>
-		<FileAlignment>512</FileAlignment>
+		<!-- <FileAlignment>512</FileAlignment> -->
 		<!-- <Optimize>true</Optimize> -->
 		<NoWarn>1701;1702;1591</NoWarn>
 		<Configurations>Debug;Release;Windows</Configurations>

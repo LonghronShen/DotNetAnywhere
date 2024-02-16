@@ -227,12 +227,12 @@ U32 opcodeNumUses[JIT_OPCODE_MAXNUM];
 
 #endif
 
-#ifdef __GNUC__
+#if defined(__GNUC__) || defined (__clang__)
 #define GET_LABEL(var, label) var = &&label
 #define GO_NEXT() goto **(void **)(pCurOp++)
 #else
 #ifdef WIN32
-// #ifdef _M_IX86
+#ifdef _M_IX86
 #define GET_LABEL(var, label)                                                  \
   { __asm mov edi, label __asm mov var, edi }
 
@@ -241,13 +241,9 @@ U32 opcodeNumUses[JIT_OPCODE_MAXNUM];
     __asm mov edi, pCurOp __asm add edi, 4 __asm mov pCurOp,                   \
         edi __asm jmp DWORD PTR[edi - 4]                                       \
   }
-// #else
-// void get_label(void *var, void *label);
-// void go_next();
-
-// #define GET_LABEL(var, label) get_label(var, label);
-// #define GO_NEXT() go_next();
-// #endif
+#else
+#error "Not supported"
+#endif
 #endif
 #endif
 
