@@ -36,6 +36,16 @@ target_link_libraries(graph
     PUBLIC freetype
 )
 
+if(NOT HAVE_SYS_MMAN_H)
+    target_link_libraries(graph
+        PUBLIC mman
+    )
+
+    target_compile_definitions(graph
+        PUBLIC USE_MMAN_WIN32
+    )
+endif()
+
 foreach(res IN ITEMS ${fonts})
 	message(STATUS "Copying ${file} to ${CMAKE_BINARY_DIR} ...")
 	get_filename_component(res_file_name ${res} NAME)

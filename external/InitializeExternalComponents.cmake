@@ -10,6 +10,8 @@ set(FETCHCONTENT_UPDATES_DISCONNECTED ON CACHE STRING "FETCHCONTENT_UPDATES_DISC
 include(FetchContent)
 include(dotnet)
 
+include(polyfills)
+
 # cmrc
 FetchContent_Declare(cmrc
     GIT_REPOSITORY https://github.com/vector-of-bool/cmrc.git

@@ -52,16 +52,20 @@ function(add_dotnet_core_project lib_name target_dir)
 endfunction()
 
 function(add_msbuild_project lib_name target_dir)
-  file(GLOB_RECURSE subdir_src "${target_dir}/*.cs" "${target_dir}/*.csproj")
+  if (NOT MSBUILD_EXECUTABLE)
+    add_dotnet_core_project(${lib_name} ${target_dir})
+  else()
+    file(GLOB_RECURSE subdir_src "${target_dir}/*.cs" "${target_dir}/*.csproj")
 
-  add_custom_command(
-      OUTPUT "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${lib_name}.xml"
-      COMMAND "${MSBUILD_EXECUTABLE}" "${lib_name}.csproj" /p:OutputPath="${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/"
-      DEPENDS ${subdir_src}
-      WORKING_DIRECTORY "${target_dir}/"
-  )
+    add_custom_command(
+        OUTPUT "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${lib_name}.xml"
+        COMMAND "${MSBUILD_EXECUTABLE}" "${lib_name}.csproj" /p:OutputPath="${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/"
+        DEPENDS ${subdir_src}
+        WORKING_DIRECTORY "${target_dir}/"
+    )
 
-  add_custom_target("managed_lib_${lib_name}" ALL
-    DEPENDS "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${lib_name}.xml"
-  )
+    add_custom_target("managed_lib_${lib_name}" ALL
+      DEPENDS "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${lib_name}.xml"
+    )
+  endif()
 endfunction()

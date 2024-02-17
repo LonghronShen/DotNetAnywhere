@@ -30,13 +30,13 @@ namespace CustomDevice
     public static class KeyPad
     {
 
-        [DllImport("libIGraph")]
+        [DllImport("graph")]
         extern private static bool IsKeyDown_Internal(KeyPadKey key);
 
-        [DllImport("libIGraph")]
+        [DllImport("graph")]
         extern private static int LatestKeyUp_Internal();
 
-        [DllImport("libIGraph")]
+        [DllImport("graph")]
         extern private static int LatestKeyDown_Internal();
 
         public static bool IsKeyDown(KeyPadKey key)

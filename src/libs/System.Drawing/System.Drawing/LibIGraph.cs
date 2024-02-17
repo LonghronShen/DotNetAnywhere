@@ -31,153 +31,153 @@ namespace System.Drawing {
 
 		#region Graphics methods
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static IntPtr GetScreen(out int xSize, out int ySize, out PixelFormat pixelFormat);
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static IntPtr GetGraphicsFromImage(IntPtr imageNative);
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static void DisposeGraphics(IntPtr graphics);
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static void TextRenderingHint_Set(IntPtr graphics, TextRenderingHint textRenderingHint);
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static void Clear(IntPtr native, int argb);
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static void DrawLine_Ints(IntPtr graphics, IntPtr pen, int x1, int y1, int x2, int y2);
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static void FillRectangle_Ints(IntPtr graphics, IntPtr brush, int x, int y, int width, int height);
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static void DrawEllipse_Ints(IntPtr graphics, IntPtr pen, int x, int y, int width, int height);
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static void FillEllipse_Ints(IntPtr graphics, IntPtr brush, int x, int y, int width, int height);
 
-		[DllImport("libIGraph", CharSet = CharSet.Unicode)]
+		[DllImport("graph", CharSet = CharSet.Unicode)]
 		extern public static void DrawString(IntPtr graphics, string s, IntPtr font, IntPtr brush, int x1, int y1, int x2, int y2, IntPtr format);
 
-		[DllImport("libIGraph", CharSet = CharSet.Unicode)]
+		[DllImport("graph", CharSet = CharSet.Unicode)]
 		extern public static void MeasureString(IntPtr graphics, string s, IntPtr font, int width, IntPtr format, out int szWidth, out int szHeight);
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static void DrawImageUnscaled(IntPtr graphics, IntPtr image, int x, int y);
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static void Graphics_SetClip(IntPtr graphics, IntPtr region);
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static void Graphics_CopyFromScreen(IntPtr graphics, int srcX, int srcY, int destX, int destY, int sizeX, int sizeY);
 
 		#endregion
 
 		#region Pen methods
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static IntPtr CreatePen_Color(float width, int argb);
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static void DisposePen(IntPtr native);
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static void Pen_SetCol(IntPtr native, int argb);
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static void Pen_SetWidth(IntPtr native, float width);
 
 		#endregion
 
 		#region Brush methods
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static IntPtr CreateBrush_Solid(int argb);
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static IntPtr CreateBrush_Hatch(HatchStyle hatchStyle, int foreCol, int backCol);
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static IntPtr CreateBrush_LinearGradient(int x1, int y1, int x2, int y2, int col1, int col2);
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static void DisposeBrush(IntPtr native);
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static void SolidBrush_SetCol(IntPtr native, int argb);
 
 		#endregion
 
 		#region FontFamily methods
 
-		[DllImport("libIGraph", CharSet=CharSet.Ansi)]
+		[DllImport("graph", CharSet=CharSet.Ansi)]
 		extern public static IntPtr CreateFontFamily_Name(string name);
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static void DisposeFontFamily(IntPtr native);
 
 		#endregion
 
 		#region Font methods
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static IntPtr _CreateFont(IntPtr family, float emSize, FontStyle style);
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static void DisposeFont(IntPtr native);
 
 		#endregion
 
 		#region StringFormat methods
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static IntPtr CreateStringFormat(StringAlignment alignment, StringFormatFlags formatFlags, StringAlignment lineAlignment, StringTrimming stringTrimming);
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static void DisposeStringFormat(IntPtr native);
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static void StringFormat_SetTrimming(IntPtr stringFormat, StringTrimming trimming);
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static void StringFormat_SetAlignment(IntPtr stringFormat, StringAlignment alignment);
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static void StringFormat_SetLineAlignment(IntPtr stringFormat, StringAlignment lineAlignment);
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static void StringFormat_SetFormatFlags(IntPtr stringFormat, StringFormatFlags formatFlags);
 
 		#endregion
 
 		#region Image methods
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static void DisposeImage(IntPtr native);
 
 		#endregion
 
 		#region Bitmap methods
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static IntPtr _CreateBitmap(int width, int height, PixelFormat pixelFormat);
 
-		[DllImport("libIGraph", CharSet = CharSet.Ansi)]
+		[DllImport("graph", CharSet = CharSet.Ansi)]
 		extern public static IntPtr BitmapFromFile(string filename, out int width, out int height, out PixelFormat pixelFormat);
 
 		#endregion
 
 		#region Region methods
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static IntPtr CreateRegion_Infinite();
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static IntPtr CreateRegion_Rect(int x, int y, int width, int height);
 
-		[DllImport("libIGraph")]
+		[DllImport("graph")]
 		extern public static void DisposeRegion(IntPtr native);
 
 		#endregion

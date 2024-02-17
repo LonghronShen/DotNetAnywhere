@@ -86,7 +86,13 @@ typedef I8 int8_t;
 #else
 
 #include <stdint.h>
+
+#ifdef USE_MMAN_WIN32
+#include <mman.h>
+#else
 #include <sys/mman.h>
+#endif
+
 #include <sys/types.h>
 #include <unistd.h>
 
