@@ -110,7 +110,7 @@ tMD_TypeDef *Generics_GetGenericTypeFromCoreType(tMD_TypeDef *pCoreType,
   pInst = pCoreType->pGenericInstances;
   while (pInst != NULL) {
     if (pInst->numTypeArgs == numTypeArgs &&
-        memcmp(pInst->pTypeArgs, ppTypeArgs,
+        memcmp(GenericInstance_GetTypeArgs(pInst), ppTypeArgs,
                numTypeArgs * sizeof(tMD_TypeDef *)) == 0) {
       return pInst->pInstanceTypeDef;
     }
@@ -125,7 +125,8 @@ tMD_TypeDef *Generics_GetGenericTypeFromCoreType(tMD_TypeDef *pCoreType,
   pCoreType->pGenericInstances = pInst;
   // Copy the type args into the instantiation.
   pInst->numTypeArgs = numTypeArgs;
-  memcpy(pInst->pTypeArgs, ppTypeArgs, numTypeArgs * sizeof(tMD_TypeDef *));
+    memcpy(GenericInstance_GetTypeArgs(pInst), ppTypeArgs,
+      numTypeArgs * sizeof(tMD_TypeDef *));
 
   // Create the new instantiated type
   pInst->pInstanceTypeDef = pTypeDef = TMALLOCFOREVER(tMD_TypeDef);
@@ -164,7 +165,7 @@ tMD_TypeDef *Generics_GetGenericTypeFromCoreType(tMD_TypeDef *pCoreType,
   pTypeDef->nameSpace = pCoreType->nameSpace;
   pTypeDef->name = (STRING)mallocForever((U32)strlen(name) + 1);
   strcpy(pTypeDef->name, name);
-  pTypeDef->ppClassTypeArgs = pInst->pTypeArgs;
+  pTypeDef->ppClassTypeArgs = GenericInstance_GetTypeArgs(pInst);
   pTypeDef->extends = pCoreType->extends;
   pTypeDef->tableIndex = pCoreType->tableIndex;
   pTypeDef->fieldList = pCoreType->fieldList;
@@ -228,7 +229,7 @@ tMD_MethodDef *Generics_GetMethodDefFromCoreMethod(tMD_MethodDef *pCoreMethod,
   pInst = pCoreMethod->pGenericMethodInstances;
   while (pInst != NULL) {
     if (pInst->numTypeArgs == numTypeArgs &&
-        memcmp(pInst->pTypeArgs, ppTypeArgs,
+        memcmp(GenericMethodInstance_GetTypeArgs(pInst), ppTypeArgs,
                numTypeArgs * sizeof(tMD_TypeDef *)) == 0) {
       return pInst->pInstanceMethodDef;
     }
@@ -241,7 +242,8 @@ tMD_MethodDef *Generics_GetMethodDefFromCoreMethod(tMD_MethodDef *pCoreMethod,
   pInst->pNext = pCoreMethod->pGenericMethodInstances;
   pCoreMethod->pGenericMethodInstances = pInst;
   pInst->numTypeArgs = numTypeArgs;
-  memcpy(pInst->pTypeArgs, ppTypeArgs, numTypeArgs * sizeof(tMD_TypeDef *));
+    memcpy(GenericMethodInstance_GetTypeArgs(pInst), ppTypeArgs,
+      numTypeArgs * sizeof(tMD_TypeDef *));
 
   pInst->pInstanceMethodDef = pMethod = TMALLOCFOREVER(tMD_MethodDef);
   memset(pMethod, 0, sizeof(tMD_MethodDef));
@@ -253,10 +255,10 @@ tMD_MethodDef *Generics_GetMethodDefFromCoreMethod(tMD_MethodDef *pCoreMethod,
   pMethod->name = pCoreMethod->name;
   pMethod->signature = pCoreMethod->signature;
   pMethod->vTableOfs = pCoreMethod->vTableOfs;
-  pMethod->ppMethodTypeArgs = pInst->pTypeArgs;
+  pMethod->ppMethodTypeArgs = GenericMethodInstance_GetTypeArgs(pInst);
 
   MetaData_Fill_MethodDef(pParentType, pMethod, pParentType->ppClassTypeArgs,
-                          pInst->pTypeArgs);
+                          GenericMethodInstance_GetTypeArgs(pInst));
 
   return pMethod;
 }

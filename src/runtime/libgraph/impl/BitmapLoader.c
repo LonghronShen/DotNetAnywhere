@@ -85,7 +85,8 @@ tBitmap *LoadBMP(U8 *pFile, I32 *pWidth, I32 *pHeight, U32 *pPixelFormat) {
   *pWidth = width = pBmp->image.width;
   *pHeight = height = pBmp->image.height;
   *pPixelFormat = pBmp->image.pixelFormat;
-  pBmpMem = (U32 *)(pBmp->pBmp + (bih.biHeight - 1) * pBmp->stride);
+  pBmpMem = (U32 *)(Bitmap_GetPixels(pBmp) +
+                    (bih.biHeight - 1) * pBmp->stride);
   pFilePicMem = pFile + 14 + sizeof(tBitmapInfoHeader);
 
   switch (bih.biBitCount) {
@@ -419,7 +420,7 @@ tBitmap *LoadGIF(U8 *pFile, I32 *pWidth, I32 *pHeight, U32 *pPixelFormat) {
   *pWidth = width = pBmp->image.width;
   *pHeight = height = pBmp->image.height;
   *pPixelFormat = pBmp->image.pixelFormat;
-  pBmpMem = (U32 *)(pBmp->pBmp);
+  pBmpMem = (U32 *)Bitmap_GetPixels(pBmp);
   gctSize = 1 << ((pLSD->flags & GIF_LSD_GLOBALCOLOURTABLE_SIZE_MASK) + 1);
   pColTable = (tGifColourTableEntry *)(((U8 *)pLSD) + 7);
 
@@ -599,7 +600,7 @@ tBitmap *LoadJPEG(U8 *pFile, U32 fileSize, I32 *pWidth, I32 *pHeight,
   tinyjpeg_get_components(pJpegDecoder, &pRGB);
 
   pBmp = CreateBitmap_(width, height, PixelFormat_Format32bppArgb);
-  pBmpMem = (U32 *)(pBmp->pBmp);
+  pBmpMem = (U32 *)Bitmap_GetPixels(pBmp);
   for (i = width * height; i > 0; i--) {
     *pBmpMem++ = ARGB(255, pRGB[0], pRGB[1], pRGB[2]);
     pRGB += 3;

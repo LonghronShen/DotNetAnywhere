@@ -38,21 +38,25 @@ unsigned int MetaData_DecodeSigEntry(SIG *pSig) {
   a = *p++;
   if ((a & 0x80) == 0) {
     // 1-byte entry
+    *pSig = (SIG)p;
     return a;
   }
   // Special case
   if (a == 0xff) {
+    *pSig = (SIG)p;
     return 0;
   }
 
   b = *p++;
   if ((a & 0xc0) == 0x80) {
     // 2-byte entry
+    *pSig = (SIG)p;
     return ((int)(a & 0x3f)) << 8 | b;
   }
   // 4-byte entry
   c = *p++;
   d = *p++;
+  *pSig = (SIG)p;
   return ((int)(a & 0x1f)) << 24 | ((int)b) << 16 | ((int)c) << 8 | d;
 }
 
@@ -307,7 +311,8 @@ static void *LoadSingleTable(tMetaData *pThis, tRVA *pRVA, int tableID,
   void *pRet;
   unsigned char *pSource = *ppTable;
   unsigned char *pDest;
-  unsigned int v;
+  UPTR v;
+
 
   // Calculate the destination row size from table definition, if it hasn't
   // already been calculated
@@ -315,7 +320,10 @@ static void *LoadSingleTable(tMetaData *pThis, tRVA *pRVA, int tableID,
     for (i = 0; i < defLen; i += 2) {
       switch (pDef[i + 1]) {
       case '*':
-        rowLen += 4;
+        rowLen += (pDef[i] == 'S' || pDef[i] == 'G' || pDef[i] == 'B' ||
+                   pDef[i] == '^' || pDef[i] == 'm')
+                      ? sizeof(PTR)
+                      : sizeof(U32);
         break;
       case 's':
         rowLen += 2;
@@ -411,7 +419,7 @@ static void *LoadSingleTable(tMetaData *pThis, tRVA *pRVA, int tableID,
             v = GetU16(pSource);
             pSource += 2;
           }
-          v = (unsigned int)(pThis->strings.pStart + v);
+          v = (UPTR)(pThis->strings.pStart + v);
           break;
         case 'G': // index into GUID heap
           if (pThis->index32BitGUID) {
@@ -421,7 +429,7 @@ static void *LoadSingleTable(tMetaData *pThis, tRVA *pRVA, int tableID,
             v = GetU16(pSource);
             pSource += 2;
           }
-          v = (unsigned int)(pThis->GUIDs.pGUID1 + ((v - 1) * 16));
+          v = (UPTR)(pThis->GUIDs.pGUID1 + ((v - 1) * 16));
           break;
         case 'B': // index into BLOB heap
           if (pThis->index32BitBlob) {
@@ -431,15 +439,15 @@ static void *LoadSingleTable(tMetaData *pThis, tRVA *pRVA, int tableID,
             v = GetU16(pSource);
             pSource += 2;
           }
-          v = (unsigned int)(pThis->blobs.pStart + v);
+          v = (UPTR)(pThis->blobs.pStart + v);
           break;
         case '^': // RVA to convert to pointer
           v = GetU32(pSource);
           pSource += 4;
-          v = (unsigned int)RVA_FindData(pRVA, v);
+          v = (UPTR)RVA_FindData(pRVA, (U32)v);
           break;
         case 'm': // Pointer to this metadata
-          v = (unsigned int)pThis;
+          v = (UPTR)pThis;
           break;
         case 'l': // Is this the last table entry?
           v = (row == numRows - 1);
@@ -458,8 +466,14 @@ static void *LoadSingleTable(tMetaData *pThis, tRVA *pRVA, int tableID,
       }
       switch (pDef[i + 1]) {
       case '*':
-        *(unsigned int *)pDest = v;
-        pDest += 4;
+        if (pDef[i] == 'S' || pDef[i] == 'G' || pDef[i] == 'B' ||
+            pDef[i] == '^' || pDef[i] == 'm') {
+          *(PTR *)pDest = (PTR)v;
+          pDest += sizeof(PTR);
+        } else {
+          *(U32 *)pDest = (U32)v;
+          pDest += sizeof(U32);
+        }
         break;
       case 's':
         *(unsigned short *)pDest = (unsigned short)v;
@@ -485,6 +499,7 @@ static void *LoadSingleTable(tMetaData *pThis, tRVA *pRVA, int tableID,
   *ppTable = pSource;
   // Return new table information
   return pRet;
+
 }
 
 void MetaData_LoadTables(tMetaData *pThis, tRVA *pRVA, void *pStream,
@@ -552,11 +567,12 @@ void MetaData_LoadTables(tMetaData *pThis, tRVA *pRVA, void *pStream,
 }
 
 PTR MetaData_GetBlob(BLOB_ blob, U32 *pBlobLength) {
-  unsigned int len = MetaData_DecodeHeapEntryLength(&blob);
+  unsigned char *pBlob = blob;
+  unsigned int len = MetaData_DecodeHeapEntryLength(&pBlob);
   if (pBlobLength != NULL) {
     *pBlobLength = len;
   }
-  return blob;
+  return pBlob;
 }
 
 // Returns length in bytes, not characters

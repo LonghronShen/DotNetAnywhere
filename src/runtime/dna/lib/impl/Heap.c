@@ -84,9 +84,9 @@ struct tHeapEntry_ {
   // Used for locking sync, and tracking WeakReference that point to this object
   tSync *pSync;
 
-  // The user memory
-  U8 memory[0];
 };
+#define HeapEntry_GetMemory(pHeapEntry) \
+  ((U8 *)((pHeapEntry) + 1))
 // Get the tHeapEntry pointer when given a HEAP_PTR object
 #define GET_HEAPENTRY(heapObj) ((tHeapEntry *)(heapObj - sizeof(tHeapEntry)))
 
@@ -340,7 +340,8 @@ static void GarbageCollect() {
                    pType->pArrayElementType->stackType == EVALSTACK_PTR)) {
 
                 if (pType != types[TYPE_SYSTEM_WEAKREFERENCE]) {
-                  Heap_SetRoots(&heapRoots, pNode->memory, GetSize(pNode));
+                  Heap_SetRoots(&heapRoots, HeapEntry_GetMemory(pNode),
+                                GetSize(pNode));
                   moreRootsAdded = 1;
                 }
               }
@@ -478,13 +479,13 @@ HEAP_PTR Heap_Alloc(tMD_TypeDef *pTypeDef, U32 size) {
   pHeapEntry->pTypeDef = pTypeDef;
   pHeapEntry->pSync = NULL;
   pHeapEntry->needToFinalize = (pTypeDef->pFinalizer != NULL);
-  memset(pHeapEntry->memory, 0, size);
+  memset(HeapEntry_GetMemory(pHeapEntry), 0, size);
   trackHeapSize += totalSize;
 
   pHeapTreeRoot = TreeInsert(pHeapTreeRoot, pHeapEntry);
   numNodes++;
 
-  return pHeapEntry->memory;
+  return HeapEntry_GetMemory(pHeapEntry);
 }
 
 HEAP_PTR Heap_AllocType(tMD_TypeDef *pTypeDef) {
@@ -522,7 +523,7 @@ HEAP_PTR Heap_Clone(HEAP_PTR obj) {
   U32 size = GetSize(pObj);
 
   clone = Heap_Alloc(pObj->pTypeDef, size);
-  memcpy(clone, pObj->memory, size);
+  memcpy(clone, HeapEntry_GetMemory(pObj), size);
 
   return clone;
 }

@@ -36,8 +36,6 @@ struct tGenericInstance_ {
 
   // The number of type arguments for this instance
   U32 numTypeArgs;
-  // The type arguments for this instantiation
-  tMD_TypeDef *pTypeArgs[0];
 };
 
 struct tGenericMethodInstance_ {
@@ -50,8 +48,13 @@ struct tGenericMethodInstance_ {
   // The number of type arguments for this instance
   U32 numTypeArgs;
   // The method type arguments for this instance
-  tMD_TypeDef *pTypeArgs[0];
 };
+
+#define GenericInstance_GetTypeArgs(pInstance) \
+  ((tMD_TypeDef **)((unsigned char *)(pInstance) + sizeof(tGenericInstance)))
+#define GenericMethodInstance_GetTypeArgs(pInstance) \
+  ((tMD_TypeDef **)((unsigned char *)(pInstance) + \
+                    sizeof(tGenericMethodInstance)))
 
 void Generic_GetHeapRoots(tHeapRoots *pHeapRoots, tMD_TypeDef *pTypeDef);
 

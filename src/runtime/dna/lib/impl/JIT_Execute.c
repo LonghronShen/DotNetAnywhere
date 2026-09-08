@@ -20,6 +20,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include <dna/runtime/clr/Sys.h>
 #include <dna/runtime/clr/pla/Compat.h>
@@ -45,7 +46,8 @@ tJITCodeInfo jitCodeInfo[JIT_OPCODE_MAXNUM];
 tJITCodeInfo jitCodeGoNext;
 
 // Get the next op-code
-#define GET_OP() *(pCurOp++)
+#define GET_OP() ((U32)*(pCurOp++))
+#define GET_OP_PTR() ((PTR)*(pCurOp++))
 
 // Push a PTR value on the top of the stack
 #define PUSH_PTR(ptr)                                                          \
@@ -209,11 +211,7 @@ static tMethodState *RunFinalizer(tThread *pThread) {
 
 #ifdef DIAG_OPCODE_TIMES
 U64 opcodeTimes[JIT_OPCODE_MAXNUM];
-static __inline unsigned __int64 __cdecl rdtsc() {
-  __asm {
-		rdtsc
-  }
-}
+static U64 rdtsc(void) { return (U64)clock(); }
 #endif
 
 #ifdef DIAG_OPCODE_USE
@@ -227,25 +225,8 @@ U32 opcodeNumUses[JIT_OPCODE_MAXNUM];
 
 #endif
 
-#if defined(__GNUC__) || defined (__clang__)
-#define GET_LABEL(var, label) var = &&label
-#define GO_NEXT() goto **(void **)(pCurOp++)
-#else
-#ifdef WIN32
-#ifdef _M_IX86
-#define GET_LABEL(var, label)                                                  \
-  { __asm mov edi, label __asm mov var, edi }
-
-#define GO_NEXT()                                                              \
-  {                                                                            \
-    __asm mov edi, pCurOp __asm add edi, 4 __asm mov pCurOp,                   \
-        edi __asm jmp DWORD PTR[edi - 4]                                       \
-  }
-#else
-#error "Not supported"
-#endif
-#endif
-#endif
+#define GET_LABEL(var, label) ((void)0)
+#define GO_NEXT() goto portable_dispatch
 
 #define GO_NEXT_CHECK()                                                        \
   if (--numInst == 0)                                                          \
@@ -253,17 +234,13 @@ U32 opcodeNumUses[JIT_OPCODE_MAXNUM];
   GO_NEXT()
 
 #define GET_LABELS(op)                                                         \
-  GET_LABEL(pAddr, op##_start);                                                \
-  jitCodeInfo[op].pStart = pAddr;                                              \
-  GET_LABEL(pAddr, op##_end);                                                  \
-  jitCodeInfo[op].pEnd = pAddr;                                                \
+  jitCodeInfo[op].pStart = (void *)1;                                           \
+  jitCodeInfo[op].pEnd = (void *)1;                                             \
   jitCodeInfo[op].isDynamic = 0
 
 #define GET_LABELS_DYNAMIC(op, extraBytes)                                     \
-  GET_LABEL(pAddr, op##_start);                                                \
-  jitCodeInfo[op].pStart = pAddr;                                              \
-  GET_LABEL(pAddr, op##_end);                                                  \
-  jitCodeInfo[op].pEnd = pAddr;                                                \
+  jitCodeInfo[op].pStart = (void *)1;                                           \
+  jitCodeInfo[op].pEnd = (void *)1;                                             \
   jitCodeInfo[op].isDynamic = 0x100 | (extraBytes & 0xff)
 
 #define RUN_FINALIZER()                                                        \
@@ -281,8 +258,8 @@ U32 JIT_Execute(tThread *pThread, U32 numInst) {
 
   // Local copies of thread state variables, to speed up execution
   // Pointer to next op-code
-  U32 *pOps;
-  register U32 *pCurOp;
+  UPTR *pOps;
+  register UPTR *pCurOp;
   // Pointer to eval-stack position
   register PTR pCurEvalStack;
   PTR pTempPtr;
@@ -300,19 +277,16 @@ U32 JIT_Execute(tThread *pThread, U32 numInst) {
   PTR pMem;
 
   if (pThread == NULL) {
-    void *pAddr;
     // Special case to get all the label addresses
     // Default all op-codes to noCode.
-    GET_LABEL(pAddr, noCode);
     for (u32Value = 0; u32Value < JIT_OPCODE_MAXNUM; u32Value++) {
-      jitCodeInfo[u32Value].pStart = pAddr;
+      jitCodeInfo[u32Value].pStart = NULL;
       jitCodeInfo[u32Value].pEnd = NULL;
       jitCodeInfo[u32Value].isDynamic = 0;
     }
 
-    // Get GoNext code
-    GET_LABEL(jitCodeGoNext.pStart, JIT_GoNext_start);
-    GET_LABEL(jitCodeGoNext.pEnd, JIT_GoNext_end);
+    jitCodeGoNext.pStart = NULL;
+    jitCodeGoNext.pEnd = NULL;
     jitCodeGoNext.isDynamic = 0;
 
     // Get all defined opcodes
@@ -636,6 +610,13 @@ U32 JIT_Execute(tThread *pThread, U32 numInst) {
 
   GO_NEXT();
 
+portable_dispatch:
+  switch ((U32)(*pCurOp++)) {
+#include "JIT_DispatchCases.h"
+  default:
+    goto noCode;
+  }
+
 noCode:
   Crash("No code for op-code");
 
@@ -781,7 +762,7 @@ JIT_LOADPARAMLOCAL_VALUETYPE_start:
     PTR pMem;
 
     ofs = GET_OP();
-    pTypeDef = (tMD_TypeDef *)GET_OP();
+    pTypeDef = (tMD_TypeDef *)GET_OP_PTR();
     pMem = pParamsLocals + ofs;
     PUSH_VALUETYPE(pMem, pTypeDef->stackSize, pTypeDef->stackSize);
   }
@@ -884,7 +865,7 @@ JIT_STOREPARAMLOCAL_VALUETYPE_start:
     PTR pMem;
 
     ofs = GET_OP();
-    pTypeDef = (tMD_TypeDef *)GET_OP();
+    pTypeDef = (tMD_TypeDef *)GET_OP_PTR();
     pMem = pParamsLocals + ofs;
     POP_VALUETYPE(pMem, pTypeDef->stackSize, pTypeDef->stackSize);
   }
@@ -1108,7 +1089,7 @@ JIT_INVOKE_DELEGATE_start:
     if (pCurrentMethodState->pNextDelegate == NULL) {
       // First delegate, so get the Invoke() method defined within the delegate
       // class
-      pDelegateMethod = (tMD_MethodDef *)GET_OP();
+      pDelegateMethod = (tMD_MethodDef *)GET_OP_PTR();
       // Take the params off the stack. This is the pointer to the tDelegate &
       // params
       // pCurrentMethodState->stackOfs -= pDelegateMethod->parameterStackSize;
@@ -1179,10 +1160,10 @@ allCallStart:
     tMD_TypeDef *pBoxCallType;
 
     if (op == JIT_BOX_CALLVIRT) {
-      pBoxCallType = (tMD_TypeDef *)GET_OP();
+      pBoxCallType = (tMD_TypeDef *)GET_OP_PTR();
     }
 
-    pCallMethod = (tMD_MethodDef *)GET_OP();
+    pCallMethod = (tMD_MethodDef *)GET_OP_PTR();
     heapPtr = NULL;
 
     if (op == JIT_BOX_CALLVIRT) {
@@ -2397,7 +2378,7 @@ JIT_LOADOBJECT_start:
     PTR pMem;
 
     pMem = POP_PTR();                   // address of value-type
-    pTypeDef = (tMD_TypeDef *)GET_OP(); // type of the value-type
+    pTypeDef = (tMD_TypeDef *)GET_OP_PTR(); // type of the value-type
     // if (pTypeDef->stackSize != pTypeDef->arrayElementSize) {
     // For bytes and int16s we need some special code to ensure that the stack
     // does not contain rubbish in the bits unused in this type.
@@ -2430,7 +2411,7 @@ JIT_NEWOBJECT_start:
     U32 isInternalConstructor;
     PTR pTempPtr;
 
-    pConstructorDef = (tMD_MethodDef *)GET_OP();
+    pConstructorDef = (tMD_MethodDef *)GET_OP_PTR();
     isInternalConstructor =
         (pConstructorDef->implFlags & METHODIMPLATTRIBUTES_INTERNALCALL) != 0;
 
@@ -2472,7 +2453,7 @@ JIT_NEWOBJECT_VALUETYPE_start:
     U32 isInternalConstructor;
     PTR pTempPtr, pMem;
 
-    pConstructorDef = (tMD_MethodDef *)GET_OP();
+    pConstructorDef = (tMD_MethodDef *)GET_OP_PTR();
     isInternalConstructor =
         (pConstructorDef->implFlags & METHODIMPLATTRIBUTES_INTERNALCALL) != 0;
 
@@ -2508,7 +2489,7 @@ jitCastClass:
     tMD_TypeDef *pToType, *pTestType;
     HEAP_PTR heapPtr;
 
-    pToType = (tMD_TypeDef *)GET_OP();
+    pToType = (tMD_TypeDef *)GET_OP_PTR();
     heapPtr = POP_O();
     if (heapPtr == NULL) {
       PUSH_O(NULL);
@@ -2548,7 +2529,7 @@ JIT_NEW_VECTOR_start: // Array with 1 dimension, zero-based
     U32 numElements;
     HEAP_PTR heapPtr;
 
-    pArrayTypeDef = (tMD_TypeDef *)GET_OP();
+    pArrayTypeDef = (tMD_TypeDef *)GET_OP_PTR();
     numElements = POP_U32();
     heapPtr = SystemArray_NewVector(pArrayTypeDef, numElements);
     PUSH_O(heapPtr);
@@ -2715,7 +2696,7 @@ JIT_STOREFIELD_F32_start:
     U32 value;
     HEAP_PTR heapPtr;
 
-    pFieldDef = (tMD_FieldDef *)GET_OP();
+    pFieldDef = (tMD_FieldDef *)GET_OP_PTR();
     value = POP_U32();
     heapPtr = POP_O();
     pMem = heapPtr + pFieldDef->memOffset;
@@ -2982,7 +2963,7 @@ JIT_BOX_INT64_start:
 JIT_BOX_F64_start:
   OPCODE_USE(JIT_BOX_INT64);
   {
-    tMD_TypeDef *pTypeDef = (tMD_TypeDef *)GET_OP();
+    tMD_TypeDef *pTypeDef = (tMD_TypeDef *)GET_OP_PTR();
     heapPtr = Heap_AllocType(pTypeDef);
     *(U64 *)heapPtr = POP_U64();
     PUSH_O(heapPtr);
