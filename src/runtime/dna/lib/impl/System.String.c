@@ -38,9 +38,10 @@ typedef struct tSystemString_ tSystemString;
 struct tSystemString_ {
   // Length in characters (not bytes)
   U32 length;
-  // The characters
-  U16 chars[0];
 };
+
+#define SystemString_GetChars(pString) \
+  ((U16 *)((unsigned char *)(pString) + sizeof(U32)))
 
 // length in characters, not bytes
 static tSystemString *CreateStringHeapObj(U32 len) {
@@ -64,7 +65,7 @@ tAsyncCall *System_String_ctor_CharInt32(PTR pThis_, PTR pParams,
   len = ((U32 *)pParams)[1];
   pSystemString = CreateStringHeapObj(len);
   for (i = 0; i < len; i++) {
-    pSystemString->chars[i] = c;
+    SystemString_GetChars(pSystemString)[i] = c;
   }
   *(HEAP_PTR *)pReturnValue = (HEAP_PTR)pSystemString;
 
@@ -84,7 +85,8 @@ tAsyncCall *System_String_ctor_CharAIntInt(PTR pThis_, PTR pParams,
 
   charElements = SystemArray_GetElements(charArray);
   pSystemString = CreateStringHeapObj(length);
-  memcpy(pSystemString->chars, charElements + (startIndex << 1), length << 1);
+    memcpy(SystemString_GetChars(pSystemString), charElements + (startIndex << 1),
+      length << 1);
   *(HEAP_PTR *)pReturnValue = (HEAP_PTR)pSystemString;
 
   return NULL;
@@ -100,7 +102,8 @@ tAsyncCall *System_String_ctor_StringIntInt(PTR pThis_, PTR pParams,
   length = ((U32 *)pParams)[2];
 
   pThis = CreateStringHeapObj(length);
-  memcpy(pThis->chars, &pStr->chars[startIndex], length << 1);
+    memcpy(SystemString_GetChars(pThis), &SystemString_GetChars(pStr)[startIndex],
+      length << 1);
   *(HEAP_PTR *)pReturnValue = (HEAP_PTR)pThis;
 
   return NULL;
@@ -111,7 +114,7 @@ tAsyncCall *System_String_get_Chars(PTR pThis_, PTR pParams, PTR pReturnValue) {
   U32 index;
 
   index = *(U32 *)pParams;
-  *(U32 *)pReturnValue = pThis->chars[index];
+  *(U32 *)pReturnValue = SystemString_GetChars(pThis)[index];
 
   return NULL;
 }
@@ -123,8 +126,9 @@ tAsyncCall *System_String_InternalConcat(PTR pThis_, PTR pParams,
   s0 = (tSystemString *)(((HEAP_PTR *)pParams)[0]);
   s1 = (tSystemString *)(((HEAP_PTR *)pParams)[1]);
   ret = CreateStringHeapObj(s0->length + s1->length);
-  memcpy(ret->chars, s0->chars, s0->length << 1);
-  memcpy(&ret->chars[s0->length], s1->chars, s1->length << 1);
+    memcpy(SystemString_GetChars(ret), SystemString_GetChars(s0), s0->length << 1);
+    memcpy(&SystemString_GetChars(ret)[s0->length], SystemString_GetChars(s1),
+      s1->length << 1);
   *(HEAP_PTR *)pReturnValue = (HEAP_PTR)ret;
 
   return NULL;
@@ -153,7 +157,7 @@ tAsyncCall *System_String_InternalTrim(PTR pThis_, PTR pParams,
     for (i = ofsStart; i < ofsEnd; i++) {
       // Check if each char is in the array
       isWhiteSpace = 0;
-      c = pThis->chars[i];
+      c = SystemString_GetChars(pThis)[i];
       for (j = 0; j < checkCharsLen; j++) {
         if (c == pCheckChars[j]) {
           isWhiteSpace = 1;
@@ -171,7 +175,7 @@ tAsyncCall *System_String_InternalTrim(PTR pThis_, PTR pParams,
     for (i = ofsEnd - 1; i >= ofsStart; i--) {
       // Check if each char is in the array
       isWhiteSpace = 0;
-      c = pThis->chars[i];
+      c = SystemString_GetChars(pThis)[i];
       for (j = 0; j < checkCharsLen; j++) {
         if (c == pCheckChars[j]) {
           isWhiteSpace = 1;
@@ -186,7 +190,8 @@ tAsyncCall *System_String_InternalTrim(PTR pThis_, PTR pParams,
   }
 
   pRet = CreateStringHeapObj(ofsEnd - ofsStart);
-  memcpy(pRet->chars, &pThis->chars[ofsStart], (ofsEnd - ofsStart) << 1);
+    memcpy(SystemString_GetChars(pRet), &SystemString_GetChars(pThis)[ofsStart],
+      (ofsEnd - ofsStart) << 1);
   *(HEAP_PTR *)pReturnValue = (HEAP_PTR)pRet;
 
   return NULL;
@@ -204,7 +209,10 @@ tAsyncCall *System_String_Equals(PTR pThis_, PTR pParams, PTR pReturnValue) {
   } else if (a == NULL || b == NULL || a->length != b->length) {
     ret = 0;
   } else {
-    ret = (memcmp(a->chars, b->chars, a->length << 1) == 0) ? 1 : 0;
+    ret = (memcmp(SystemString_GetChars(a), SystemString_GetChars(b),
+            a->length << 1) == 0)
+           ? 1
+           : 0;
   }
   *(U32 *)pReturnValue = ret;
 
@@ -218,7 +226,7 @@ tAsyncCall *System_String_GetHashCode(PTR pThis_, PTR pParams,
   I32 hash;
 
   hash = 0;
-  pChar = pThis->chars;
+  pChar = SystemString_GetChars(pThis);
   pEnd = pChar + pThis->length - 1;
   for (; pChar < pEnd; pChar += 2) {
     hash = (hash << 5) - hash + pChar[0];
@@ -247,9 +255,9 @@ tAsyncCall *System_String_InternalReplace(PTR pThis_, PTR pParams,
   thisLen = pThis->length;
   oldLen = pOld->length;
   newLen = pNew->length;
-  pThisChar0 = pThis->chars;
-  pOldChar0 = pOld->chars;
-  pNewChar0 = pNew->chars;
+  pThisChar0 = SystemString_GetChars(pThis);
+  pOldChar0 = SystemString_GetChars(pOld);
+  pNewChar0 = SystemString_GetChars(pNew);
 
   replacements = 0;
   for (i = 0; i < thisLen - oldLen + 1; i++) {
@@ -267,7 +275,7 @@ tAsyncCall *System_String_InternalReplace(PTR pThis_, PTR pParams,
   }
   resultLen = thisLen - (oldLen - newLen) * replacements;
   pResult = CreateStringHeapObj(resultLen);
-  pResultChar0 = pResult->chars;
+  pResultChar0 = SystemString_GetChars(pResult);
   dstIndex = 0;
   for (i = 0; i < thisLen; i++) {
     U32 match;
@@ -317,7 +325,7 @@ tAsyncCall *System_String_InternalIndexOf(PTR pThis_, PTR pParams,
     i = startIndex + count - 1;
   }
   for (; i != lastIndex; i += inc) {
-    if (pThis->chars[i] == value) {
+    if (SystemString_GetChars(pThis)[i] == value) {
       *(I32 *)pReturnValue = i;
       return NULL;
     }
@@ -351,7 +359,7 @@ tAsyncCall *System_String_InternalIndexOfAny(PTR pThis_, PTR pParams,
     i = startIndex + count - 1;
   }
   for (; i != lastIndex; i += inc) {
-    U16 thisChar = pThis->chars[i];
+    U16 thisChar = SystemString_GetChars(pThis)[i];
     for (j = numValueChars - 1; j >= 0; j--) {
       if (thisChar == ((U16 *)valueChars)[j]) {
         *(I32 *)pReturnValue = i;
@@ -372,7 +380,7 @@ HEAP_PTR SystemString_FromUserStrings(tMetaData *pMetaData,
   string = MetaData_GetUserString(pMetaData, index, &stringLen);
   // Note: stringLen is in bytes
   pSystemString = (tSystemString *)CreateStringHeapObj(stringLen >> 1);
-  memcpy(pSystemString->chars, string, stringLen);
+  memcpy(SystemString_GetChars(pSystemString), string, stringLen);
   return (HEAP_PTR)pSystemString;
 }
 
@@ -383,7 +391,7 @@ HEAP_PTR SystemString_FromCharPtrASCII(U8 *pStr) {
   stringLen = (int)strlen(pStr);
   pSystemString = CreateStringHeapObj(stringLen);
   for (i = 0; i < stringLen; i++) {
-    pSystemString->chars[i] = pStr[i];
+    SystemString_GetChars(pSystemString)[i] = pStr[i];
   }
   return (HEAP_PTR)pSystemString;
 }
@@ -396,7 +404,7 @@ HEAP_PTR SystemString_FromCharPtrUTF16(U16 *pStr) {
     strLen++;
   }
   pSystemString = CreateStringHeapObj(strLen);
-  memcpy(pSystemString->chars, pStr, strLen << 1);
+  memcpy(SystemString_GetChars(pSystemString), pStr, strLen << 1);
   return (HEAP_PTR)pSystemString;
 }
 
@@ -406,7 +414,7 @@ STRING2 SystemString_GetString(HEAP_PTR pThis_, U32 *pLength) {
   if (pLength != NULL) {
     *pLength = pThis->length;
   }
-  return pThis->chars;
+  return SystemString_GetChars(pThis);
 }
 
 U32 SystemString_GetNumBytes(HEAP_PTR pThis_) {

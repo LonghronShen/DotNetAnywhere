@@ -30,8 +30,9 @@ struct tBitmap_ {
   tImage image;
   U32 memSize;
   U32 stride;
-  U8 pBmp[0];
 };
+
+#define Bitmap_GetPixels(pBitmap) ((U8 *)((pBitmap) + 1))
 
 tBitmap *CreateBitmap_(I32 width, I32 height, U32 pixelFormat);
 tGraphics *GetGraphicsFromBitmap_(tBitmap *pBitmap);

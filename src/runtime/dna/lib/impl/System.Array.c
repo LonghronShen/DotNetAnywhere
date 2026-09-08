@@ -35,9 +35,8 @@ typedef struct tSystemArray_ tSystemArray;
 struct tSystemArray_ {
   // How many elements in array
   U32 length;
-  // The elements
-  U8 elements[0];
 };
+#define ArrayElements(pArray) ((U8 *)((pArray) + 1))
 
 // Must return a boxed version of value-types
 tAsyncCall *System_Array_Internal_GetValue(PTR pThis_, PTR pParams,
@@ -52,7 +51,7 @@ tAsyncCall *System_Array_Internal_GetValue(PTR pThis_, PTR pParams,
   pArrayType = Heap_GetType(pThis_);
   pElementType = pArrayType->pArrayElementType;
   elementSize = pElementType->arrayElementSize;
-  pElement = pArray->elements + elementSize * index;
+  pElement = SystemArray_GetElements(pArray) + elementSize * index;
   if (pElementType->isValueType) {
     // If it's a value-type, then box it
     HEAP_PTR boxedValue;
@@ -114,7 +113,7 @@ tAsyncCall *System_Array_Internal_SetValue(PTR pThis_, PTR pParams,
 #endif
 
   elementSize = pElementType->arrayElementSize;
-  pElement = pArray->elements + elementSize * index;
+  pElement = ArrayElements(pArray) + elementSize * index;
   if (pElementType->isValueType) {
     if (pElementType->pGenericDefinition == types[TYPE_SYSTEM_NULLABLE]) {
       // Nullable type, so treat specially
@@ -147,7 +146,8 @@ tAsyncCall *System_Array_Clear(PTR pThis_, PTR pParams, PTR pReturnValue) {
   length = ((U32 *)pParams)[2];
   pArrayType = Heap_GetType((HEAP_PTR)pArray);
   elementSize = pArrayType->pArrayElementType->arrayElementSize;
-  memset(pArray->elements + index * elementSize, 0, length * elementSize);
+    memset(ArrayElements(pArray) + index * elementSize, 0,
+      length * elementSize);
 
   return NULL;
 }
@@ -182,8 +182,8 @@ tAsyncCall *System_Array_Internal_Copy(PTR pThis_, PTR pParams,
 
     elementSize = pSrcElementType->arrayElementSize;
 
-    memcpy(pDst->elements + dstIndex * elementSize,
-           pSrc->elements + srcIndex * elementSize, length * elementSize);
+        memcpy(ArrayElements(pDst) + dstIndex * elementSize,
+          ArrayElements(pSrc) + srcIndex * elementSize, length * elementSize);
 
     *(U32 *)pReturnValue = 1;
   } else {
@@ -215,7 +215,7 @@ tAsyncCall *System_Array_Resize(PTR pThis_, PTR pParams, PTR pReturnValue) {
   pHeap = SystemArray_NewVector(pArrayTypeDef, newSize);
   pNewArray = (tSystemArray *)pHeap;
   *ppArray_ = pHeap;
-  memcpy(pNewArray->elements, pOldArray->elements,
+  memcpy(ArrayElements(pNewArray), ArrayElements(pOldArray),
          pArrayTypeDef->pArrayElementType->arrayElementSize *
              ((newSize < oldSize) ? newSize : oldSize));
 
@@ -235,8 +235,8 @@ tAsyncCall *System_Array_Reverse(PTR pThis_, PTR pParams, PTR pReturnValue) {
   pArrayType = Heap_GetType((HEAP_PTR)pArray);
   elementSize = pArrayType->pArrayElementType->arrayElementSize;
 
-  pE1 = pArray->elements + index * elementSize;
-  pE2 = pArray->elements + (index + length - 1) * elementSize;
+  pE1 = ArrayElements(pArray) + index * elementSize;
+  pE2 = ArrayElements(pArray) + (index + length - 1) * elementSize;
   dec = elementSize << 1;
 
   while (pE2 > pE1) {
@@ -281,16 +281,16 @@ void SystemArray_StoreElement(HEAP_PTR pThis_, U32 index, PTR value) {
   elemSize = pArrayTypeDef->pArrayElementType->arrayElementSize;
   switch (elemSize) {
   case 1:
-    ((U8 *)(pArray->elements))[index] = *(U8 *)value;
+    (ArrayElements(pArray))[index] = *(U8 *)value;
     break;
   case 2:
-    ((U16 *)(pArray->elements))[index] = *(U16 *)value;
+    ((U16 *)ArrayElements(pArray))[index] = *(U16 *)value;
     break;
   case 4:
-    ((U32 *)(pArray->elements))[index] = *(U32 *)value;
+    ((U32 *)ArrayElements(pArray))[index] = *(U32 *)value;
     break;
   default:
-    memcpy(&pArray->elements[index * elemSize], value, elemSize);
+    memcpy(&ArrayElements(pArray)[index * elemSize], value, elemSize);
     break;
   }
 }
@@ -304,16 +304,16 @@ void SystemArray_LoadElement(HEAP_PTR pThis_, U32 index, PTR value) {
   elemSize = pArrayTypeDef->pArrayElementType->arrayElementSize;
   switch (elemSize) {
   case 1:
-    *(U8 *)value = ((U8 *)(pArray->elements))[index];
+    *(U8 *)value = ArrayElements(pArray)[index];
     break;
   case 2:
-    *(U16 *)value = ((U16 *)(pArray->elements))[index];
+    *(U16 *)value = ((U16 *)ArrayElements(pArray))[index];
     break;
   case 4:
-    *(U32 *)value = ((U32 *)(pArray->elements))[index];
+    *(U32 *)value = ((U32 *)ArrayElements(pArray))[index];
     break;
   default:
-    memcpy(value, &pArray->elements[index * elemSize], elemSize);
+    memcpy(value, &ArrayElements(pArray)[index * elemSize], elemSize);
     break;
   }
 }
@@ -330,7 +330,7 @@ PTR SystemArray_LoadElementAddress(HEAP_PTR pThis_, U32 index) {
 #endif
 
   pArrayTypeDef = Heap_GetType(pThis_);
-  return pArray->elements +
+  return ArrayElements(pArray) +
          pArrayTypeDef->pArrayElementType->arrayElementSize * index;
 }
 

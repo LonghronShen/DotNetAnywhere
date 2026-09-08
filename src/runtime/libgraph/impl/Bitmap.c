@@ -53,7 +53,7 @@ tBitmap *CreateBitmap_(I32 width, I32 height, U32 pixelFormat) {
     return NULL;
   }
 
-  memset(pBitmap->pBmp, 0, memSize);
+  memset(Bitmap_GetPixels(pBitmap), 0, memSize);
   pBitmap->memSize = memSize;
   pBitmap->stride = stride;
 
@@ -67,7 +67,7 @@ tGraphics *GetGraphicsFromBitmap_(tBitmap *pBitmap) {
   pGraphics->pImage = (tImage *)pBitmap;
   pGraphics->pixelFormat = pBitmap->image.pixelFormat;
   pGraphics->pixelFormatIndex = pBitmap->image.pixelFormatIndex;
-  pGraphics->pScan0 = pBitmap->pBmp;
+  pGraphics->pScan0 = Bitmap_GetPixels(pBitmap);
   pGraphics->screenPtr = NULL;
   pGraphics->stride = pBitmap->stride;
   pGraphics->textRenderingHint = TextRenderingHint_SystemDefault;

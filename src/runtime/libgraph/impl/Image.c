@@ -71,7 +71,8 @@ static U32 Image_GetPixel_Bitmap(tImage *pImage, I32 x, I32 y) {
     // NOT IMPLEMENTED YET
     return 0xff000000;
   case FMT_32BPP_ARGB:
-    return *(U32 *)(((U8 *)pBitmap->pBmp) + y * pBitmap->stride + (x << 2));
+    return *(U32 *)(Bitmap_GetPixels(pBitmap) + y * pBitmap->stride +
+            (x << 2));
   default:
     return 0;
   }
