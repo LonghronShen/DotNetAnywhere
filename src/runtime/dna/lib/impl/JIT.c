@@ -79,7 +79,7 @@ static UPTR Translate(U32 op, U32 getDynamic) {
   if (getDynamic) {
     return (U32)jitCodeInfo[op].isDynamic;
   } else {
-    return (UPTR)jitCodeInfo[op].pStart;
+    return (UPTR)op;
   }
 }
 

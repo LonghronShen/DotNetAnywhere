@@ -20,6 +20,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include <dna/runtime/clr/Sys.h>
 #include <dna/runtime/clr/pla/Compat.h>
@@ -210,11 +211,7 @@ static tMethodState *RunFinalizer(tThread *pThread) {
 
 #ifdef DIAG_OPCODE_TIMES
 U64 opcodeTimes[JIT_OPCODE_MAXNUM];
-static __inline unsigned __int64 __cdecl rdtsc() {
-  __asm {
-		rdtsc
-  }
-}
+static U64 rdtsc(void) { return (U64)clock(); }
 #endif
 
 #ifdef DIAG_OPCODE_USE
@@ -228,25 +225,8 @@ U32 opcodeNumUses[JIT_OPCODE_MAXNUM];
 
 #endif
 
-#if defined(__GNUC__) || defined (__clang__)
-#define GET_LABEL(var, label) var = &&label
-#define GO_NEXT() goto **(void **)(pCurOp++)
-#else
-#ifdef WIN32
-#ifdef _M_IX86
-#define GET_LABEL(var, label)                                                  \
-  { __asm mov edi, label __asm mov var, edi }
-
-#define GO_NEXT()                                                              \
-  {                                                                            \
-    __asm mov edi, pCurOp __asm add edi, 4 __asm mov pCurOp,                   \
-        edi __asm jmp DWORD PTR[edi - 4]                                       \
-  }
-#else
-#error "Not supported"
-#endif
-#endif
-#endif
+#define GET_LABEL(var, label) ((void)0)
+#define GO_NEXT() goto portable_dispatch
 
 #define GO_NEXT_CHECK()                                                        \
   if (--numInst == 0)                                                          \
@@ -254,17 +234,13 @@ U32 opcodeNumUses[JIT_OPCODE_MAXNUM];
   GO_NEXT()
 
 #define GET_LABELS(op)                                                         \
-  GET_LABEL(pAddr, op##_start);                                                \
-  jitCodeInfo[op].pStart = pAddr;                                              \
-  GET_LABEL(pAddr, op##_end);                                                  \
-  jitCodeInfo[op].pEnd = pAddr;                                                \
+  jitCodeInfo[op].pStart = (void *)1;                                           \
+  jitCodeInfo[op].pEnd = (void *)1;                                             \
   jitCodeInfo[op].isDynamic = 0
 
 #define GET_LABELS_DYNAMIC(op, extraBytes)                                     \
-  GET_LABEL(pAddr, op##_start);                                                \
-  jitCodeInfo[op].pStart = pAddr;                                              \
-  GET_LABEL(pAddr, op##_end);                                                  \
-  jitCodeInfo[op].pEnd = pAddr;                                                \
+  jitCodeInfo[op].pStart = (void *)1;                                           \
+  jitCodeInfo[op].pEnd = (void *)1;                                             \
   jitCodeInfo[op].isDynamic = 0x100 | (extraBytes & 0xff)
 
 #define RUN_FINALIZER()                                                        \
@@ -301,19 +277,16 @@ U32 JIT_Execute(tThread *pThread, U32 numInst) {
   PTR pMem;
 
   if (pThread == NULL) {
-    void *pAddr;
     // Special case to get all the label addresses
     // Default all op-codes to noCode.
-    GET_LABEL(pAddr, noCode);
     for (u32Value = 0; u32Value < JIT_OPCODE_MAXNUM; u32Value++) {
-      jitCodeInfo[u32Value].pStart = pAddr;
+      jitCodeInfo[u32Value].pStart = NULL;
       jitCodeInfo[u32Value].pEnd = NULL;
       jitCodeInfo[u32Value].isDynamic = 0;
     }
 
-    // Get GoNext code
-    GET_LABEL(jitCodeGoNext.pStart, JIT_GoNext_start);
-    GET_LABEL(jitCodeGoNext.pEnd, JIT_GoNext_end);
+    jitCodeGoNext.pStart = NULL;
+    jitCodeGoNext.pEnd = NULL;
     jitCodeGoNext.isDynamic = 0;
 
     // Get all defined opcodes
@@ -636,6 +609,13 @@ U32 JIT_Execute(tThread *pThread, U32 numInst) {
   LOAD_METHOD_STATE();
 
   GO_NEXT();
+
+portable_dispatch:
+  switch ((U32)(*pCurOp++)) {
+#include "JIT_DispatchCases.h"
+  default:
+    goto noCode;
+  }
 
 noCode:
   Crash("No code for op-code");

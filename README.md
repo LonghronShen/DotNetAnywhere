@@ -127,10 +127,10 @@ written in C and use standard C11 payload accessors instead of zero-length
 array members. Variable-size data is allocated after a fixed header and is
 accessed through explicit pointer arithmetic.
 
-The interpreter still uses compiler-specific threaded dispatch in
-`JIT_Execute.c`: GCC and Clang use computed gotos, while MSVC uses the
-existing architecture-specific assembly path. A fully portable switch- or
-function-pointer-based dispatcher has not yet replaced this path.
+The interpreter uses a standard C switch dispatcher in `JIT_Execute.c`. CMake
+generates the opcode case table from the registered handlers, so GCC, Clang,
+and MSVC use the same dispatch implementation without computed goto or inline
+assembly.
 
 The CMake configuration supports x86, x86_64, and ARM64 toolchains. Use
 `DNA_FORCE_32BIT=ON` for an x86 build on a capable Linux host. The x86 runtime

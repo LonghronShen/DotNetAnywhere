@@ -1,5 +1,16 @@
 project(dna C CXX)
 
+file(STRINGS "${CMAKE_CURRENT_LIST_DIR}/impl/JIT_Execute.c" jit_opcode_registrations
+    REGEX "^    GET_LABELS(_DYNAMIC)?\\(")
+set(jit_dispatch_cases "")
+foreach(jit_registration IN LISTS jit_opcode_registrations)
+    string(REGEX REPLACE ".*\\(([^,\\)]+).*" "case \\1: goto \\1_start;" jit_case
+         "${jit_registration}")
+    string(APPEND jit_dispatch_cases "    ${jit_case}\n")
+endforeach()
+file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/JIT_DispatchCases.h"
+    CONTENT "${jit_dispatch_cases}")
+
 file(GLOB_RECURSE src
     ${CMAKE_CURRENT_LIST_DIR}/*.h
     ${CMAKE_CURRENT_LIST_DIR}/*.hpp
@@ -76,4 +87,5 @@ endif()
 target_include_directories(dna-lib
     PUBLIC "${CMAKE_CURRENT_LIST_DIR}/include/public"
     PRIVATE "${CMAKE_CURRENT_LIST_DIR}/include/private"
+            "${CMAKE_CURRENT_BINARY_DIR}"
 )
