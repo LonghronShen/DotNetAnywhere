@@ -40,7 +40,7 @@ struct tCombinedOpcodesMem_ {
 
 struct tJITted_ {
   // The JITted opcodes
-  U32 *pOps;
+  UPTR *pOps;
   // The maximum size of the evaluation stack
   U32 maxStack;
   // The required size of the locals stack
@@ -80,19 +80,19 @@ struct tExceptionHeader_ {
 
 typedef struct tJITCallNative_ tJITCallNative;
 struct tJITCallNative_ {
-  U32 opCode;
+  UPTR opCode;
   // The method meta-data
   tMD_MethodDef *pMethodDef;
   // the native pointer to the function
   fnInternalCall fn;
   // The RET instruction. This is needed when the native function has blocking
   // IO or sleep
-  U32 retOpCode;
+  UPTR retOpCode;
 };
 
 typedef struct tJITCallPInvoke_ tJITCallPInvoke;
 struct tJITCallPInvoke_ {
-  U32 opCode;
+  UPTR opCode;
   // The native function to call - type should be fnPInvoke, but there's a
   // problem with #including PInvoke.h
   void *fn;

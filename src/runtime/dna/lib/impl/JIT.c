@@ -50,7 +50,7 @@
 
 typedef struct tOps_ tOps;
 struct tOps_ {
-  U32 *p;
+  UPTR *p;
   U32 capacity;
   U32 ofs;
 };
@@ -65,11 +65,11 @@ struct tTypeStack_ {
 #define InitOps(ops_, initialCapacity)                                         \
   ops_.capacity = initialCapacity;                                             \
   ops_.ofs = 0;                                                                \
-  ops_.p = malloc((initialCapacity) * sizeof(I32));
+  ops_.p = malloc((initialCapacity) * sizeof(UPTR));
 #define DeleteOps(ops_) free(ops_.p)
 
 // Turn this into a MACRO at some point?
-static U32 Translate(U32 op, U32 getDynamic) {
+static UPTR Translate(U32 op, U32 getDynamic) {
   if (op >= JIT_OPCODE_MAXNUM) {
     Crash("Illegal opcode: %d", op);
   }
@@ -79,16 +79,16 @@ static U32 Translate(U32 op, U32 getDynamic) {
   if (getDynamic) {
     return (U32)jitCodeInfo[op].isDynamic;
   } else {
-    return (U32)jitCodeInfo[op].pStart;
+    return (UPTR)jitCodeInfo[op].pStart;
   }
 }
 
 #ifdef GEN_COMBINED_OPCODES
 #define PushU32(v)                                                             \
-  PushU32_(&ops, (U32)(v));                                                    \
+  PushU32_(&ops, (UPTR)(v));                                                   \
   PushU32_(&isDynamic, 0)
 #define PushI32(v)                                                             \
-  PushU32_(&ops, (U32)(v));                                                    \
+  PushU32_(&ops, (UPTR)(v));                                                   \
   PushU32_(&isDynamic, 0)
 #define PushFloat(v)                                                           \
   convFloat.f = (float)(v);                                                    \
@@ -101,30 +101,30 @@ static U32 Translate(U32 op, U32 getDynamic) {
   PushU32_(&isDynamic, 0);                                                     \
   PushU32_(&isDynamic, 0)
 #define PushPTR(ptr)                                                           \
-  PushU32_(&ops, (U32)(ptr));                                                  \
+  PushU32_(&ops, (UPTR)(ptr));                                                 \
   PushU32_(&isDynamic, 0)
 #define PushOp(op)                                                             \
   PushU32_(&ops, Translate((U32)(op), 0));                                     \
   PushU32_(&isDynamic, Translate((U32)(op), 1))
 #define PushOpParam(op, param)                                                 \
   PushOp(op);                                                                  \
-  PushU32_(&ops, (U32)(param));                                                \
+  PushU32_(&ops, (UPTR)(param));                                               \
   PushU32_(&isDynamic, 0)
 #else
-#define PushU32(v) PushU32_(&ops, (U32)(v))
-#define PushI32(v) PushU32_(&ops, (U32)(v))
+#define PushU32(v) PushU32_(&ops, (UPTR)(v))
+#define PushI32(v) PushU32_(&ops, (UPTR)(v))
 #define PushFloat(v)                                                           \
   convFloat.f = (float)(v);                                                    \
-  PushU32_(&ops, convFloat.u32)
+  PushU32_(&ops, (UPTR)convFloat.u32)
 #define PushDouble(v)                                                          \
   convDouble.d = (double)(v);                                                  \
   PushU32_(&ops, convDouble.u32.a);                                            \
   PushU32_(&ops, convDouble.u32.b)
-#define PushPTR(ptr) PushU32_(&ops, (U32)(ptr))
+#define PushPTR(ptr) PushU32_(&ops, (UPTR)(ptr))
 #define PushOp(op) PushU32_(&ops, Translate((U32)(op), 0))
 #define PushOpParam(op, param)                                                 \
   PushOp(op);                                                                  \
-  PushU32_(&ops, (U32)(param))
+  PushU32_(&ops, (UPTR)(param))
 #endif
 
 #define PushBranch() PushU32_(&branchOffsets, ops.ofs)
@@ -156,12 +156,12 @@ static void PushStackType_(tTypeStack *pTypeStack, tMD_TypeDef *pType) {
   // size, size);
 }
 
-static void PushU32_(tOps *pOps, U32 v) {
+static void PushU32_(tOps *pOps, UPTR v) {
   if (pOps->ofs >= pOps->capacity) {
     pOps->capacity <<= 1;
     //		printf("a.pOps->p = 0x%08x size=%d\n", pOps->p, pOps->capacity *
     // sizeof(U32));
-    pOps->p = realloc(pOps->p, pOps->capacity * sizeof(U32));
+    pOps->p = realloc(pOps->p, pOps->capacity * sizeof(UPTR));
   }
   pOps->p[pOps->ofs++] = v;
 }
@@ -1795,7 +1795,7 @@ void JIT_Prepare(tMD_MethodDef *pMethodDef, U32 genCombinedOpcodes) {
     pCallNative->retOpCode = Translate(JIT_RETURN, 0);
 
     pJITted->localsStackSize = 0;
-    pJITted->pOps = (U32 *)pCallNative;
+    pJITted->pOps = (UPTR *)pCallNative;
 
     return;
   }
@@ -1822,7 +1822,7 @@ void JIT_Prepare(tMD_MethodDef *pMethodDef, U32 genCombinedOpcodes) {
         (pMethodDef->pReturnType == NULL)
             ? 0
             : pMethodDef->pReturnType->stackSize; // For return value
-    pJITted->pOps = (U32 *)pCallPInvoke;
+    pJITted->pOps = (UPTR *)pCallPInvoke;
 
     return;
   }

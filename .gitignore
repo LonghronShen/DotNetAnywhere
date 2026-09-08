@@ -35,6 +35,7 @@
 build
 build/
 build.*/
+build-*/
 main/build/
 
 # idea

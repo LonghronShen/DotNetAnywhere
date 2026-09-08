@@ -45,7 +45,8 @@ tJITCodeInfo jitCodeInfo[JIT_OPCODE_MAXNUM];
 tJITCodeInfo jitCodeGoNext;
 
 // Get the next op-code
-#define GET_OP() *(pCurOp++)
+#define GET_OP() ((U32)*(pCurOp++))
+#define GET_OP_PTR() ((PTR)*(pCurOp++))
 
 // Push a PTR value on the top of the stack
 #define PUSH_PTR(ptr)                                                          \
@@ -281,8 +282,8 @@ U32 JIT_Execute(tThread *pThread, U32 numInst) {
 
   // Local copies of thread state variables, to speed up execution
   // Pointer to next op-code
-  U32 *pOps;
-  register U32 *pCurOp;
+  UPTR *pOps;
+  register UPTR *pCurOp;
   // Pointer to eval-stack position
   register PTR pCurEvalStack;
   PTR pTempPtr;
@@ -781,7 +782,7 @@ JIT_LOADPARAMLOCAL_VALUETYPE_start:
     PTR pMem;
 
     ofs = GET_OP();
-    pTypeDef = (tMD_TypeDef *)GET_OP();
+    pTypeDef = (tMD_TypeDef *)GET_OP_PTR();
     pMem = pParamsLocals + ofs;
     PUSH_VALUETYPE(pMem, pTypeDef->stackSize, pTypeDef->stackSize);
   }
@@ -884,7 +885,7 @@ JIT_STOREPARAMLOCAL_VALUETYPE_start:
     PTR pMem;
 
     ofs = GET_OP();
-    pTypeDef = (tMD_TypeDef *)GET_OP();
+    pTypeDef = (tMD_TypeDef *)GET_OP_PTR();
     pMem = pParamsLocals + ofs;
     POP_VALUETYPE(pMem, pTypeDef->stackSize, pTypeDef->stackSize);
   }
@@ -1108,7 +1109,7 @@ JIT_INVOKE_DELEGATE_start:
     if (pCurrentMethodState->pNextDelegate == NULL) {
       // First delegate, so get the Invoke() method defined within the delegate
       // class
-      pDelegateMethod = (tMD_MethodDef *)GET_OP();
+      pDelegateMethod = (tMD_MethodDef *)GET_OP_PTR();
       // Take the params off the stack. This is the pointer to the tDelegate &
       // params
       // pCurrentMethodState->stackOfs -= pDelegateMethod->parameterStackSize;
@@ -1179,10 +1180,10 @@ allCallStart:
     tMD_TypeDef *pBoxCallType;
 
     if (op == JIT_BOX_CALLVIRT) {
-      pBoxCallType = (tMD_TypeDef *)GET_OP();
+      pBoxCallType = (tMD_TypeDef *)GET_OP_PTR();
     }
 
-    pCallMethod = (tMD_MethodDef *)GET_OP();
+    pCallMethod = (tMD_MethodDef *)GET_OP_PTR();
     heapPtr = NULL;
 
     if (op == JIT_BOX_CALLVIRT) {
@@ -2397,7 +2398,7 @@ JIT_LOADOBJECT_start:
     PTR pMem;
 
     pMem = POP_PTR();                   // address of value-type
-    pTypeDef = (tMD_TypeDef *)GET_OP(); // type of the value-type
+    pTypeDef = (tMD_TypeDef *)GET_OP_PTR(); // type of the value-type
     // if (pTypeDef->stackSize != pTypeDef->arrayElementSize) {
     // For bytes and int16s we need some special code to ensure that the stack
     // does not contain rubbish in the bits unused in this type.
@@ -2430,7 +2431,7 @@ JIT_NEWOBJECT_start:
     U32 isInternalConstructor;
     PTR pTempPtr;
 
-    pConstructorDef = (tMD_MethodDef *)GET_OP();
+    pConstructorDef = (tMD_MethodDef *)GET_OP_PTR();
     isInternalConstructor =
         (pConstructorDef->implFlags & METHODIMPLATTRIBUTES_INTERNALCALL) != 0;
 
@@ -2472,7 +2473,7 @@ JIT_NEWOBJECT_VALUETYPE_start:
     U32 isInternalConstructor;
     PTR pTempPtr, pMem;
 
-    pConstructorDef = (tMD_MethodDef *)GET_OP();
+    pConstructorDef = (tMD_MethodDef *)GET_OP_PTR();
     isInternalConstructor =
         (pConstructorDef->implFlags & METHODIMPLATTRIBUTES_INTERNALCALL) != 0;
 
@@ -2508,7 +2509,7 @@ jitCastClass:
     tMD_TypeDef *pToType, *pTestType;
     HEAP_PTR heapPtr;
 
-    pToType = (tMD_TypeDef *)GET_OP();
+    pToType = (tMD_TypeDef *)GET_OP_PTR();
     heapPtr = POP_O();
     if (heapPtr == NULL) {
       PUSH_O(NULL);
@@ -2548,7 +2549,7 @@ JIT_NEW_VECTOR_start: // Array with 1 dimension, zero-based
     U32 numElements;
     HEAP_PTR heapPtr;
 
-    pArrayTypeDef = (tMD_TypeDef *)GET_OP();
+    pArrayTypeDef = (tMD_TypeDef *)GET_OP_PTR();
     numElements = POP_U32();
     heapPtr = SystemArray_NewVector(pArrayTypeDef, numElements);
     PUSH_O(heapPtr);
@@ -2715,7 +2716,7 @@ JIT_STOREFIELD_F32_start:
     U32 value;
     HEAP_PTR heapPtr;
 
-    pFieldDef = (tMD_FieldDef *)GET_OP();
+    pFieldDef = (tMD_FieldDef *)GET_OP_PTR();
     value = POP_U32();
     heapPtr = POP_O();
     pMem = heapPtr + pFieldDef->memOffset;
@@ -2982,7 +2983,7 @@ JIT_BOX_INT64_start:
 JIT_BOX_F64_start:
   OPCODE_USE(JIT_BOX_INT64);
   {
-    tMD_TypeDef *pTypeDef = (tMD_TypeDef *)GET_OP();
+    tMD_TypeDef *pTypeDef = (tMD_TypeDef *)GET_OP_PTR();
     heapPtr = Heap_AllocType(pTypeDef);
     *(U64 *)heapPtr = POP_U64();
     PUSH_O(heapPtr);
