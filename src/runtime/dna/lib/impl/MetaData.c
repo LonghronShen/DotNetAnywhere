@@ -38,21 +38,25 @@ unsigned int MetaData_DecodeSigEntry(SIG *pSig) {
   a = *p++;
   if ((a & 0x80) == 0) {
     // 1-byte entry
+    *pSig = (SIG)p;
     return a;
   }
   // Special case
   if (a == 0xff) {
+    *pSig = (SIG)p;
     return 0;
   }
 
   b = *p++;
   if ((a & 0xc0) == 0x80) {
     // 2-byte entry
+    *pSig = (SIG)p;
     return ((int)(a & 0x3f)) << 8 | b;
   }
   // 4-byte entry
   c = *p++;
   d = *p++;
+  *pSig = (SIG)p;
   return ((int)(a & 0x1f)) << 24 | ((int)b) << 16 | ((int)c) << 8 | d;
 }
 
@@ -552,11 +556,12 @@ void MetaData_LoadTables(tMetaData *pThis, tRVA *pRVA, void *pStream,
 }
 
 PTR MetaData_GetBlob(BLOB_ blob, U32 *pBlobLength) {
-  unsigned int len = MetaData_DecodeHeapEntryLength(&blob);
+  unsigned char *pBlob = blob;
+  unsigned int len = MetaData_DecodeHeapEntryLength(&pBlob);
   if (pBlobLength != NULL) {
     *pBlobLength = len;
   }
-  return blob;
+  return pBlob;
 }
 
 // Returns length in bytes, not characters
