@@ -1,6 +1,6 @@
 Dot Net Anywhere
 ================
-Dot Net Anywhere is a interpreted .NET CIL runtime.
+Dot Net Anywhere is an interpreted .NET CIL runtime.
 
 -------
 
@@ -14,38 +14,63 @@ The runtime itself is written in C and has been designed to be as small and port
 
 How To Build
 ------------
-The simplest way to build Dot Net Anywhere is using Visual Studio 2011 on Windows. Open and build both the solutions:
+The current build uses CMake and Ninja or another supported CMake generator.
+The native runtime is compiled as C11; the managed libraries and examples are
+built with `dotnet`/MSBuild.
 
-* dna.sln
-* Managed.sln
+On Debian or Ubuntu, install the build prerequisites first:
 
-This will create a 'Build/Debug/' directory which contains:
+```
+sudo apt-get update
+sudo apt-get install build-essential cmake ninja-build dotnet-sdk-8.0 \
+	zlib1g-dev libfreetype6-dev
+```
 
-* ***dna.exe***: The CIL interpreter runtime *(native executable)*
-* ***libIGraph.dll***: Low-levl graphics handling *(native library)*
-* ***FreeType.dll***: The [FreeType][2] font engine *(native library)*
-* ***/Fonts*** directory: Font .ttf files
-* ***corlib.dll***: Dot Net Anywhere implementation of mscorlib.dll *(CIL library)*
-* ***System.dll***:  Dot Net Anywhere implementation of System.dll *(CIL library)*
-* ***System.Core.dll***:  Dot Net Anywhere implementation of System.Core.dll *(CIL library)*
-* ***System.Drawing.dll***:  Dot Net Anywhere implementation of System.Drawing.dll; requires libIGraph.dll *(CIL library)*
-* ***CustomDevice.dll***: Defines a the user interface of a custom device *(CIL library)*
-* ***Snake.exe***: Demonstration game of snake *(CIL executable)*
+Configure and build a native x86_64 tree:
+
+```
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug
+cmake --build build
+```
+
+For the legacy x86 configuration, install `gcc-multilib`, `g++-multilib`,
+`libc6-dev-i386`, and `zlib1g-dev:i386`, then use a separate build tree:
+
+```
+cmake -S . -B build-x86 -G Ninja -DCMAKE_BUILD_TYPE=Debug \
+	-DDNA_FORCE_32BIT=ON \
+	-DZLIB_LIBRARY_RELEASE=/usr/lib/i386-linux-gnu/libz.so \
+	-DZLIB_LIBRARY_DEBUG=/usr/lib/i386-linux-gnu/libz.so
+cmake --build build-x86
+```
+
+Build output is written to `<build-directory>/bin/`, including `dna`, the
+graphics library, the managed runtime libraries, `HelloWorld.exe`, and
+`Snake.exe`.
 
 How to use
 ----------
 
-When at a command prompt in the Build/Debug directory:
+From a build output directory:
 
 ```
-dna.exe [<options>] <CIL executable> [<Cil executable arguments>]
+./dna [<options>] <CIL executable> [<CIL executable arguments>]
 ```
 
 So, to run the included snake game:
 
 ```
-dna.exe Snake.exe
+./dna Snake.exe
 ```
+
+The minimal runtime smoke test is:
+
+```
+./dna ./HelloWorld.exe
+```
+
+`HelloWorld.exe` returns `126` (`84 + 42`) rather than printing text. The
+`-v` and `-vv` options enable module, garbage-collection, and JIT diagnostics.
 
 The Dot Net Anywhere interpreter can show all two levels of verbosity. Using the -v option shows initial .NET module load data and garbage collection information. Using -vv also shows all methods that are being JITted.
 
@@ -92,15 +117,25 @@ Implementation
 
 The Dot Net Anywhere interpreter JITs each method as required into an internal format, which is then interpreted using a [direct-threaded][3] interpreter. The JIT stage does a full stack-type analysis and explicitly stores type information within the internal format's opcodes, allowing considerably more efficient interpretation that if the CIL was directly interpreted.
 
-Custom platforms
+Portability
 -------------------------
 
 Dot Net Anywhere has been designed to be fairly simple to port to custom platforms.
 
-dna.exe and libIGraph.dll will need to be built for the platform. These are both written in C, and should build with most C compilers without problems. Two non-standard features are used:
+dna.exe and libIGraph.dll will need to be built for the platform. These are
+written in C and use standard C11 payload accessors instead of zero-length
+array members. Variable-size data is allocated after a fixed header and is
+accessed through explicit pointer arithmetic.
 
-1. Zero-length arrays: *char c[0];*
-2. Computed goto: void *\*ptr = ...; goto \*ptr;* (this is not supported using the Visual Studio C compiler, so an assembly replacement is provided)
+The interpreter still uses compiler-specific threaded dispatch in
+`JIT_Execute.c`: GCC and Clang use computed gotos, while MSVC uses the
+existing architecture-specific assembly path. A fully portable switch- or
+function-pointer-based dispatcher has not yet replaced this path.
+
+The CMake configuration supports x86, x86_64, and ARM64 toolchains. Use
+`DNA_FORCE_32BIT=ON` for an x86 build on a capable Linux host. The x86 runtime
+configuration is verified; x86_64 and ARM64 still require runtime validation of
+all metadata and JIT paths.
 
 The only customisation that will generally be required is in the UI/input subsystem: The CustomDevice.dll managed library and the libIGraph.dll native library.
 
